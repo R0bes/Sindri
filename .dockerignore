@@ -1,0 +1,16 @@
+.venv/
+.mypy_cache/
+.pytest_cache/
+.coverage*
+examples/
+tests/
+docs/
+.gitignore
+.git/
+.gitignore
+.git/
+.gitignore
+.git/
+.gitignore
+.git/
+.gitignore

@@ -1,0 +1,93 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sindri-dev"
+version = "0.1.4"
+description = "A project-configurable command palette for common dev workflows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Sindri Contributors"},
+]
+keywords = ["cli", "dev-tools", "workflow", "command-palette"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "typer>=0.9.0",
+    "pydantic>=2.0.0",
+    "structlog>=24.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+]
+
+# Docker support (no extra Python deps, uses shell commands)
+docker = []
+
+# Docker Compose support
+compose = []
+
+# Git support
+git = []
+
+# Version management
+version = []
+
+# PyPI publishing
+pypi = [
+    "build>=1.0.0",
+    "twine>=5.0.0",
+]
+
+# All extras
+all = [
+    "sindri-dev[docker,compose,git,version,pypi]",
+]
+
+# Convenience extras
+docker-all = [
+    "sindri-dev[docker,compose]",
+]
+
+[project.scripts]
+sindri = "sindri.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/sindri"
+Documentation = "https://github.com/yourusername/sindri#readme"
+Repository = "https://github.com/yourusername/sindri"
+Issues = "https://github.com/yourusername/sindri/issues"
+
+# Note: Update the URLs above with your actual GitHub repository URL
+
+[tool.hatch.build.targets.wheel]
+packages = ["sindri"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["sindri"]
+omit = ["tests/*", "examples/*"]
+

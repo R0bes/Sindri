@@ -1,0 +1,7 @@
+# Sindri Configuration
+# This file defines commands and workflows for your project
+
+version = "1.0"
+
+# Reference implemented command groups
+groups = ["sindri", "general", "quality", "application", "docker", "compose", "git", "pypi"]

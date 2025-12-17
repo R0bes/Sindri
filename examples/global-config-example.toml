@@ -1,0 +1,7 @@
+# Global Sindri Configuration
+# Place this file at ~/.sindri/config.toml
+# These defaults will be used for all projects
+
+[defaults]
+docker_registry = "registry.schwende.lan:5000"
+
