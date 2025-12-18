@@ -6,10 +6,8 @@ repo_name: yourusername/sindri
 
 theme:
   name: material
-  logo: assets/logo.png
+  logo: logo.png
   favicon: assets/logo.png
-  static_templates:
-    - overrides/home.html
   icon:
     logo: material/rocket-launch
   palette:
