@@ -100,9 +100,11 @@ async def run_shell_command(
                 process.kill()
                 await process.wait()
                 duration = (datetime.now() - start_time).total_seconds()
+                # Windows timeout returns exit code 1, Unix returns 124
+                timeout_exit_code = 1 if os.name == "nt" else 124
                 return CommandResult(
                     command_id=command_id,
-                    exit_code=124,
+                    exit_code=timeout_exit_code,
                     stdout="\n".join(stdout_lines),
                     stderr="\n".join(stderr_lines),
                     error=f"Command timed out after {timeout}s",
