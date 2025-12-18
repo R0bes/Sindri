@@ -127,7 +127,7 @@ Das Projekt verwendet GitHub Actions für CI/CD:
 - **Build**: Package-Build und Validierung
 - **Coverage**: Upload zu Codecov
 
-Siehe [.github/workflows/ci.yml](../.github/workflows/ci.yml) für Details.
+Siehe [.github/workflows/ci.yml](https://github.com/yourusername/sindri/blob/main/.github/workflows/ci.yml) für Details.
 
 ## Contributing
 
