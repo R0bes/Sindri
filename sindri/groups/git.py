@@ -207,9 +207,10 @@ class GitMonitorRunCommand(CustomCommand):
 
         # Get the latest run ID
         try:
+            # Get JSON output without jq to avoid shell quoting issues
             get_run_result = await run_shell_command(
                 command_id="gh-run-list",
-                shell="gh run list --limit 1 --json databaseId,status,conclusion,displayTitle --jq '.[0]'",
+                shell="gh run list --limit 1 --json databaseId,status,conclusion,displayTitle",
                 cwd=ctx.cwd,
                 env=ctx.get_env(),
             )
@@ -235,10 +236,18 @@ class GitMonitorRunCommand(CustomCommand):
                     error="No GitHub Actions runs found. Make sure you're in a Git repository with GitHub Actions configured.",
                 )
 
-            # Parse the run ID from JSON (simple extraction)
+            # Parse the run ID from JSON (array with one element)
             import json
             try:
-                run_data = json.loads(get_run_result.stdout.strip())
+                # Output is a JSON array, get first element
+                runs = json.loads(get_run_result.stdout.strip())
+                if not runs or len(runs) == 0:
+                    return CommandResult(
+                        command_id=self.id,
+                        exit_code=1,
+                        error="No GitHub Actions runs found. Make sure you're in a Git repository with GitHub Actions configured.",
+                    )
+                run_data = runs[0]  # Get first run from array
                 run_id = str(run_data.get("databaseId", ""))
                 status = run_data.get("status", "unknown")
                 conclusion = run_data.get("conclusion", "")
