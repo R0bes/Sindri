@@ -1,6 +1,6 @@
 <div align="center">
 
-![Sindri Logo](assets/logo.png)
+<img src="assets/logo.png" alt="Sindri Logo" width="200">
 
 # Sindri
 
