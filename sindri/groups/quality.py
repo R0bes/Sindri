@@ -20,21 +20,21 @@ class QualityGroup(CommandGroup):
         return [
             ShellCommand(
                 id="lint",
-                shell="ruff check .",
+                shell="python -m ruff check .",
                 title="Lint",
                 description="Run ruff linter",
                 group_id=self.id,
             ),
             ShellCommand(
                 id="format",
-                shell="ruff format .",
+                shell="python -m ruff format .",
                 title="Format",
                 description="Format code with ruff",
                 group_id=self.id,
             ),
             ShellCommand(
                 id="typecheck",
-                shell="mypy .",
+                shell="python -m mypy .",
                 title="Type Check",
                 description="Run mypy type checker",
                 group_id=self.id,
@@ -48,14 +48,14 @@ class QualityGroup(CommandGroup):
             ),
             ShellCommand(
                 id="test-cov",
-                shell="pytest --cov --cov-report=term --cov-report=html",
+                shell="python -m pytest --cov --cov-report=term --cov-report=html",
                 title="Test with Coverage",
                 description="Run tests with coverage report",
                 group_id=self.id,
             ),
             ShellCommand(
-                id="quality-check",
-                shell="ruff check . && ruff format --check . && mypy .",
+                id="check",
+                shell="python -m ruff check . && python -m ruff format --check . && python -m mypy .",
                 title="Quality Check",
                 description="Run all quality checks (lint, format check, typecheck)",
                 group_id=self.id,

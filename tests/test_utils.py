@@ -70,7 +70,9 @@ class TestFindProjectRoot:
         subdir.mkdir(parents=True)
         
         result = find_project_root(subdir)
-        assert result == temp_dir
+        assert result is not None
+        # Use resolve() to handle Windows short path names (8.3 format)
+        assert result.resolve() == temp_dir.resolve()
     
     def test_find_project_root_not_found(self, temp_dir: Path):
         """Test when project root is not found."""
