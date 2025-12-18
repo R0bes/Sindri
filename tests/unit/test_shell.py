@@ -135,15 +135,18 @@ class TestRunShellCommand:
         else:
             shell_cmd = "sleep 10"
         
-        # Mock process.wait() to raise TimeoutError to trigger the timeout path
-        with patch("asyncio.create_subprocess_shell", new_callable=AsyncMock) as mock_subprocess:
+        # Mock asyncio.create_subprocess_shell to return a process that will timeout
+        with patch("asyncio.create_subprocess_shell") as mock_subprocess:
             mock_process = MagicMock()
-            # Make wait() raise TimeoutError when awaited (to trigger line 93)
-            async def wait_side_effect():
-                raise asyncio.TimeoutError()
-            mock_process.wait = AsyncMock(side_effect=wait_side_effect)
-            mock_process.kill = MagicMock()
             mock_process.returncode = None
+            
+            # Make wait() never complete (will cause asyncio.wait_for to timeout)
+            async def wait_never_completes():
+                await asyncio.sleep(100)  # Never completes, will timeout
+                return 0
+            mock_process.wait = AsyncMock(side_effect=wait_never_completes)
+            mock_process.kill = MagicMock()
+            mock_process.terminate = MagicMock()
             
             # Mock streams - need to return empty bytes to exit read_stream loop
             mock_stdout = AsyncMock()
@@ -169,7 +172,10 @@ class TestRunShellCommand:
             mock_process.stdout = mock_stdout
             mock_process.stderr = mock_stderr
             
-            mock_subprocess.return_value = mock_process
+            # Make create_subprocess_shell return our mock process
+            async def create_subprocess_side_effect(*args, **kwargs):
+                return mock_process
+            mock_subprocess.side_effect = create_subprocess_side_effect
             
             result = await run_shell_command(
                 command_id="test",
