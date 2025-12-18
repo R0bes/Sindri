@@ -123,16 +123,43 @@ Docker Container und Image Operations.
 sindri d build
 sindri docker build
 
-# Run
-sindri d run
-sindri docker run
-
 # Push
 sindri d push
 sindri docker push
+
+# Build & Push (Alias: bp)
+sindri d bp
+sindri docker build_and_push
+
+# Container Management
+sindri d up
+sindri docker up
+
+sindri d down
+sindri docker down
+
+sindri d restart
+sindri docker restart
+
+# Logs
+sindri d logs
+sindri docker logs
+
+sindri d logs-tail
+sindri docker logs-tail
 ```
 
-### Docker Compose Commands (`c` / `compose`)
+**Verfügbare Commands:**
+- `docker-build` - Build Docker image with latest and version tags
+- `docker-push` - Push Docker image to registry
+- `docker-build_and_push` - Build and push in sequence (Alias: `bp`)
+- `docker-up` - Start Docker container
+- `docker-down` - Stop Docker container
+- `docker-restart` - Restart Docker container
+- `docker-logs` - Follow Docker container logs (Watch Mode)
+- `docker-logs-tail` - Show last 100 lines of logs
+
+### Docker Compose Commands (`c` / `compose` / `dc`)
 
 Docker Compose Service Management.
 
@@ -145,10 +172,40 @@ sindri compose up
 sindri c down
 sindri compose down
 
+# Restart
+sindri c restart
+sindri compose restart
+
+# Build
+sindri c build
+sindri compose build
+
 # Logs
 sindri c logs
 sindri compose logs
+
+# Logs Tail
+sindri c logs-tail
+sindri compose logs-tail
+
+# Status
+sindri c ps
+sindri compose ps
+
+# Pull
+sindri c pull
+sindri compose pull
 ```
+
+**Verfügbare Commands:**
+- `compose-up` - Start Docker Compose services (detached mode)
+- `compose-down` - Stop Docker Compose services
+- `compose-restart` - Restart Docker Compose services
+- `compose-build` - Build Docker Compose images
+- `compose-logs` - Follow Docker Compose logs (Watch Mode)
+- `compose-logs-tail` - Show last 100 lines of logs
+- `compose-ps` - Show Docker Compose service status
+- `compose-pull` - Pull Docker Compose images
 
 ### Git Commands (`g` / `git`)
 
@@ -202,24 +259,35 @@ sindri git wf --monitor
 - `git-monitor` - Continuously monitor Git status
 - `git-wf` - Complete workflow (add, commit, push, optional monitor)
 
-### Version Commands (`version`)
+### Version Commands (`v` / `version`)
 
 Version Management.
 
 ```bash
 # Version anzeigen
+sindri v show
 sindri version show
 
 # Version erhöhen
+sindri v bump --patch
 sindri version bump --patch
 sindri version bump --minor
 sindri version bump --major
+
+# Git Tag erstellen
+sindri v tag
+sindri version tag
 ```
 
 **Optionen:**
 - `--patch` - Patch-Version erhöhen (0.1.4 → 0.1.5)
 - `--minor` - Minor-Version erhöhen (0.1.4 → 0.2.0)
 - `--major` - Major-Version erhöhen (0.1.4 → 1.0.0)
+
+**Verfügbare Commands:**
+- `version show` - Show current version from pyproject.toml
+- `version bump` - Bump version number (updates pyproject.toml)
+- `version tag` - Create git tag for current version
 
 ### Sindri Commands (`sindri`)
 
@@ -249,32 +317,49 @@ sindri sindri docs-deploy
 - `docs-build-strict` - Build documentation site with strict mode
 - `docs-deploy` - Deploy documentation to GitHub Pages
 
-### Application Commands (`app` / `application`)
+### Application Commands (`app` / `a` / `application`)
 
 Application Lifecycle Management.
 
 ```bash
-sindri app start
-sindri application start
+# Run application
+sindri app run
+sindri application run
 
-sindri app stop
-sindri application stop
-
-sindri app restart
-sindri application restart
+# Run in development mode
+sindri app dev
+sindri application dev
 ```
+
+**Verfügbare Commands:**
+- `app-run` - Run the application
+- `app-dev` - Run in development mode (with DEBUG=1)
 
 ### PyPI Commands (`p` / `pypi`)
 
 PyPI Publishing Operations.
 
 ```bash
-sindri p build
-sindri pypi build
+# Validate package
+sindri p validate
+sindri pypi validate
 
-sindri p upload
-sindri pypi upload
+# Build and upload
+sindri p push
+sindri pypi push
+
+# Upload to Test PyPI
+sindri p push --test
+sindri pypi push --test
 ```
+
+**Verfügbare Commands:**
+- `pypi-validate` - Validate package build and metadata
+- `pypi-push` - Build and upload package to PyPI
+
+**Optionen für `pypi-push`:**
+- `--test` - Upload to Test PyPI instead of production
+- `--repository <name>` - Use custom repository
 
 ## Verfügbare Namespaces
 

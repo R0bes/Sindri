@@ -187,11 +187,14 @@ groups = [
 | `sindri` | `docs-setup`, `docs-preview`, `docs-build`, `docs-build-strict`, `docs-deploy` | Sindri-spezifische Commands für Dokumentation |
 | `general` | `setup`, `install`, etc. | Allgemeine Commands |
 | `quality` | `lint`, `format`, `typecheck`, `test`, `test-cov`, `check` | Code-Qualität, Linting, Formatting, Tests |
-| `application` | `start`, `stop`, `restart` | Application Lifecycle Management |
-| `docker` | `docker-build`, `docker-run`, `docker-push`, etc. | Docker Container und Image Operations |
-| `compose` | `compose-up`, `compose-down`, `compose-logs`, etc. | Docker Compose Service Management |
+| `application` | `app-run`, `app-dev` | Application Lifecycle Management |
+| `docker` | `docker-build`, `docker-push`, `docker-build_and_push`, `docker-up`, `docker-down`, `docker-restart`, `docker-logs`, `docker-logs-tail` | Docker Container und Image Operations |
+| `compose` | `compose-up`, `compose-down`, `compose-restart`, `compose-build`, `compose-logs`, `compose-logs-tail`, `compose-ps`, `compose-pull` | Docker Compose Service Management |
 | `git` | `git-status`, `git-add`, `git-commit`, `git-push`, `git-pull`, `git-log`, `git-monitor`, `git-wf` | Git Version Control Operations |
-| `pypi` | `pypi-build`, `pypi-upload` | PyPI Publishing Operations |
+| `version` | `version show`, `version bump`, `version tag` | Version Management |
+| `pypi` | `pypi-validate`, `pypi-push` | PyPI Publishing Operations |
+| `general` | `setup-venv`, `setup-install` | General setup commands |
+| `sindri` | `docs-setup`, `docs-preview`, `docs-build`, `docs-build-strict`, `docs-deploy` | Sindri-spezifische Commands |
 
 ## Config-Discovery
 
