@@ -367,12 +367,13 @@ sindri pypi push --test
 |-----------|-------|--------------|
 | `quality` | `q` | Quality-Commands (lint, format, test) |
 | `docker` | `d` | Docker-Commands |
-| `compose` | `c` | Docker Compose-Commands |
+| `compose` | `c`, `dc` | Docker Compose-Commands |
 | `git` | `g` | Git-Commands |
-| `version` | - | Version-Management |
+| `version` | `v` | Version-Management |
 | `sindri` | - | Sindri-spezifische Commands |
 | `application` | `app`, `a` | Application-Commands |
 | `pypi` | `p` | PyPI-Publishing |
+| `general` | - | General setup commands |
 
 ## TUI Navigation
 

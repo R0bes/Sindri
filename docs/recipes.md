@@ -404,13 +404,13 @@ id = "publish"
 title = "Publish to PyPI"
 description = "Full publishing workflow"
 shell = "echo 'Publishing to PyPI...'"
-dependencies = { before = ["test", "pypi-build"] }
+dependencies = { before = ["test", "pypi-push"] }
 
 [[commands]]
-id = "pypi-build"
-title = "Build Package"
-shell = "python -m build"
-tags = ["pypi", "build"]
+id = "pypi-push"
+title = "Build and Push Package"
+shell = "python -m build && python -m twine upload dist/*"
+tags = ["pypi", "build", "push"]
 dependencies = { before = ["test"] }
 ```
 
