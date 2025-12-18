@@ -114,6 +114,12 @@ async def run_shell_command(
                     process.terminate()
                     await process.wait()
                 
+                # Close streams to avoid "Event loop is closed" warnings
+                if process.stdout:
+                    process.stdout.close()
+                if process.stderr:
+                    process.stderr.close()
+                
                 duration = (datetime.now() - start_time).total_seconds()
                 # Windows timeout returns exit code 1, Unix returns 124
                 timeout_exit_code = 1 if os.name == "nt" else 124
@@ -133,6 +139,12 @@ async def run_shell_command(
                 process.wait(),
             )
             exit_code = process.returncode
+            
+            # Close streams to avoid "Event loop is closed" warnings
+            if process.stdout:
+                process.stdout.close()
+            if process.stderr:
+                process.stderr.close()
 
         duration = (datetime.now() - start_time).total_seconds()
         
