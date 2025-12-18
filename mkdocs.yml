@@ -8,6 +8,8 @@ theme:
   name: material
   logo: assets/logo.png
   favicon: assets/logo.png
+  static_templates:
+    - overrides/home.html
   icon:
     logo: material/rocket-launch
   palette:
