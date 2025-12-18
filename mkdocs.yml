@@ -71,8 +71,8 @@ plugins:
       enable_creation_date: true
 
 # Copy assets to site
-extra_files:
-  - assets/logo.png
+# extra_files is not a valid MkDocs option
+# Assets in docs/ directory are automatically included
 
 extra:
   social:
