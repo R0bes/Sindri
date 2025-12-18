@@ -77,28 +77,43 @@ async def run_shell_command(
         ) -> None:
             """Read from stream line by line."""
             while True:
-                line = await stream.readline()
-                if not line:
+                try:
+                    line = await stream.readline()
+                    if not line:
+                        break
+                    line_str = line.decode("utf-8", errors="replace").rstrip()
+                    lines.append(line_str)
+                    if stream_callback:
+                        prefix = f"[{command_id}]"
+                        stream_callback(f"{prefix} {line_str}", stream_type)
+                except Exception:
+                    # Stream might be closed, break
                     break
-                line_str = line.decode("utf-8", errors="replace").rstrip()
-                lines.append(line_str)
-                if stream_callback:
-                    prefix = f"[{command_id}]"
-                    stream_callback(f"{prefix} {line_str}", stream_type)
 
-        # Read both streams concurrently
-        await asyncio.gather(
-            read_stream(process.stdout, "stdout", stdout_lines),
-            read_stream(process.stderr, "stderr", stderr_lines),
-        )
-
-        # Wait for process with timeout
+        # Read streams and wait for process with timeout
         if timeout:
             try:
-                exit_code = await asyncio.wait_for(process.wait(), timeout=timeout)
+                # Use asyncio.wait_for on the entire operation
+                async def run_with_timeout():
+                    # Read streams and wait for process concurrently
+                    await asyncio.gather(
+                        read_stream(process.stdout, "stdout", stdout_lines),
+                        read_stream(process.stderr, "stderr", stderr_lines),
+                        process.wait(),
+                    )
+                    return process.returncode
+
+                exit_code = await asyncio.wait_for(run_with_timeout(), timeout=timeout)
             except asyncio.TimeoutError:
+                # Kill the process and wait for it to terminate
                 process.kill()
-                await process.wait()
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=5)
+                except asyncio.TimeoutError:
+                    # Force terminate if still running
+                    process.terminate()
+                    await process.wait()
+                
                 duration = (datetime.now() - start_time).total_seconds()
                 # Windows timeout returns exit code 1, Unix returns 124
                 timeout_exit_code = 1 if os.name == "nt" else 124
@@ -111,7 +126,13 @@ async def run_shell_command(
                     duration=duration,
                 )
         else:
-            exit_code = await process.wait()
+            # Read both streams concurrently and wait for process
+            await asyncio.gather(
+                read_stream(process.stdout, "stdout", stdout_lines),
+                read_stream(process.stderr, "stderr", stderr_lines),
+                process.wait(),
+            )
+            exit_code = process.returncode
 
         duration = (datetime.now() - start_time).total_seconds()
         

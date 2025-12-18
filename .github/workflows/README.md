@@ -30,11 +30,12 @@ Baut und veröffentlicht das Package zu PyPI bei neuen Version-Tags.
 2. Verifiziert, dass die Version in `pyproject.toml` übereinstimmt
 3. Baut das Package
 4. Prüft das Package mit `twine check`
-5. Veröffentlicht zu PyPI (benötigt `PYPI_API_TOKEN` Secret)
+5. Veröffentlicht zu PyPI (verwendet Trusted Publishing, kein Secret nötig)
 6. Erstellt ein GitHub Release (bei Tag-Push)
 
-**Erforderliche Secrets:**
-- `PYPI_API_TOKEN`: PyPI API Token für die Veröffentlichung
+**Erforderliche Setup:**
+- PyPI Trusted Publishing muss für dieses GitHub Repository konfiguriert sein
+- Siehe: https://docs.pypi.org/trusted-publishers/
 
 ### 3. Auto Version Bump (`version-bump.yml`)
 
@@ -52,21 +53,17 @@ Erstellt automatisch einen Version-Tag, wenn die Version in `pyproject.toml` ge�
 
 ## Setup
 
-### 1. PyPI API Token erstellen
+### 1. PyPI Trusted Publishing konfigurieren
 
 1. Gehe zu [pypi.org](https://pypi.org) und logge dich ein
-2. Gehe zu Account Settings → API tokens
-3. Erstelle einen neuen API Token (Scope: "Entire account" oder nur für dieses Projekt)
-4. Kopiere den Token
+2. Gehe zu deinem Projekt → Settings → Trusted publishers
+3. Klicke auf "Add" → "Add a new trusted publisher"
+4. Wähle "GitHub Actions" als Publisher
+5. Gib dein GitHub Repository ein (z.B. `R0bes/sindri`)
+6. Workflow filename: `.github/workflows/release.yml`
+7. Speichere die Konfiguration
 
-### 2. GitHub Secret hinzufügen
-
-1. Gehe zu deinem GitHub Repository
-2. Settings → Secrets and variables → Actions
-3. Klicke auf "New repository secret"
-4. Name: `PYPI_API_TOKEN`
-5. Value: Dein PyPI API Token
-6. Klicke auf "Add secret"
+**Hinweis:** Trusted Publishing ist sicherer als API Tokens, da keine Secrets gespeichert werden müssen.
 
 ### 3. Workflow Permissions
 
@@ -128,7 +125,8 @@ git commit -m "Update dependencies [skip version]"
 
 ### PyPI Upload schlägt fehl
 
-- Prüfe, ob der API Token gültig ist
+- Prüfe, ob PyPI Trusted Publishing korrekt konfiguriert ist
+- Prüfe, ob das Repository und Workflow-Filename in PyPI übereinstimmen
 - Prüfe, ob die Version bereits auf PyPI existiert (Versionen können nicht überschrieben werden)
 - Prüfe, ob das Package korrekt gebaut wurde
 
