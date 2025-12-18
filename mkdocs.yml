@@ -65,6 +65,9 @@ nav:
   - Analysis: analysis.md
   - Changelog: changelog.md
 
+# Ensure proper site structure
+strict: true
+
 plugins:
   - search
   - git-revision-date-localized:

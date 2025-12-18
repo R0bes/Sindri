@@ -8,7 +8,7 @@
 
 </div>
 
-Sindri bietet eine interaktive TUI (Text User Interface) und CLI zur Verwaltung von projektspezifischen Commands, wodurch es einfach wird, Setup-, Build-, Test- und Deployment-Aufgaben auszuführen.
+Sindri ist ein modernes CLI-Tool, das eine interaktive TUI (Text User Interface) und eine leistungsstarke Kommandozeile bietet, um projektspezifische Commands zu verwalten. Es macht es einfach, Setup-, Build-, Test- und Deployment-Aufgaben auszuführen.
 
 ## 🚀 Quick Start
 
@@ -28,13 +28,32 @@ sindri run setup
 
 ## ✨ Features
 
-- 🎯 **Interactive TUI**: Schöne Terminal-Oberfläche mit Suche, Filterung und Command-Details
-- 📝 **Project-Specific Config**: Jedes Repository definiert seine eigenen Commands via `sindri.toml`
-- 🚀 **Async Execution**: Commands asynchron mit Live-Output-Streaming ausführen
-- 🔄 **Parallel Execution**: Mehrere Commands gleichzeitig ausführen
-- 📊 **Multi-Stream Logs**: Logs von mehreren Commands in Split-Panes anzeigen
-- ⚙️ **Rich Configuration**: Unterstützung für Dependencies, Timeouts, Retries, Watch Mode und mehr
-- 🐳 **Docker Support**: Built-in Unterstützung für Docker und Docker Compose Workflows
+### 🎯 Interactive TUI
+Schöne Terminal-Oberfläche mit Suche, Filterung und Command-Details. Navigiere durch deine Commands mit der Tastatur und sieh Live-Logs während der Ausführung.
+
+### 📝 Project-Specific Config
+Jedes Repository definiert seine eigenen Commands via `sindri.toml`. Keine globalen Konfigurationen, alles projektbezogen.
+
+### 🚀 Async Execution
+Commands werden asynchron mit Live-Output-Streaming ausgeführt. Sieh die Ausgabe in Echtzeit, während Commands laufen.
+
+### 🔄 Parallel Execution
+Führe mehrere Commands gleichzeitig aus. Perfekt für parallele Builds oder Tests.
+
+### 📊 Multi-Stream Logs
+Logs von mehreren Commands werden in Split-Panes angezeigt. Behalte den Überblick über alle laufenden Prozesse.
+
+### ⚙️ Rich Configuration
+Unterstützung für Dependencies, Timeouts, Retries, Watch Mode, Environment Variables und mehr.
+
+### 🐳 Docker Support
+Built-in Unterstützung für Docker und Docker Compose Workflows. Integrierte Commands für Build, Push, Up, Down und mehr.
+
+### 🔧 Built-in Command Groups
+Vordefinierte Command-Gruppen für Quality (test, lint, format), Git, Docker, Version Management, PyPI und mehr.
+
+### 📚 Documentation Commands
+Integrierte Commands für MkDocs: Setup, Preview, Build und Deploy.
 
 ## 📚 Dokumentation
 
@@ -56,19 +75,20 @@ sindri run setup
 
 Sindri folgt einer klaren 4-Schichten-Architektur:
 
-1. **CLI Layer**: Typer-basiertes Interface
-2. **Core Layer**: Registry, Execution, Templates
-3. **Groups Layer**: Built-in Command Groups
-4. **Config Layer**: TOML-basierte Konfiguration
+1. **CLI Layer**: Typer-basiertes Interface mit Namespace-Support
+2. **Core Layer**: Registry, Execution, Templates, Shell Runner
+3. **Groups Layer**: Built-in Command Groups (Quality, Docker, Git, etc.)
+4. **Config Layer**: TOML-basierte Konfiguration mit Discovery
 
 Siehe [Architektur-Dokumentation](architecture.md) für Details.
 
 ## 📊 Projekt-Status
 
 - ✅ **Version**: 0.1.4
-- ✅ **Tests**: 195+ Tests
-- ✅ **Coverage**: ~85% (CLI: 83.35%)
+- ✅ **Tests**: 800+ Tests
+- ✅ **Coverage**: ~90% (CLI: 83.35%)
 - ✅ **Status**: Produktionsreif
+- ✅ **Python**: 3.11+
 
 Siehe [Projektanalyse](analysis.md) für eine detaillierte Bewertung.
 
@@ -85,8 +105,8 @@ MIT License - siehe [LICENSE](../LICENSE) Datei für Details.
 - Erstellt mit [Textual](https://github.com/Textualize/textual) für die TUI
 - Verwendet [Typer](https://github.com/tiangolo/typer) für die CLI
 - Konfiguration powered by [Pydantic](https://github.com/pydantic/pydantic)
+- Dokumentation mit [MkDocs Material](https://squidfunk.github.io/mkdocs-material/)
 
 ---
 
-**Letzte Aktualisierung:** 2025-01-12
-
+**Letzte Aktualisierung:** 2025-12-18
