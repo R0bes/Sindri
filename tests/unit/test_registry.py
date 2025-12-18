@@ -302,7 +302,7 @@ class TestCommandRegistry:
         mock_module.SindriGroup = mock_group_class
         mock_importlib.import_module.return_value = mock_module
         
-        loaded = registry.discover_builtin_groups()
+        registry.discover_builtin_groups()
         
         # Should attempt to load built-in groups
         assert mock_importlib.import_module.called
@@ -435,7 +435,7 @@ class TestCommandRegistry:
         # We need a scenario where line 278 doesn't match but line 288 does
         # Actually, line 278 would match "test-build", so we need a different approach
         # Let's use a command that's registered but not found by simple join
-        result = registry.resolve_parts(["test", "build"])
+        registry.resolve_parts(["test", "build"])
         # This will match at line 278, not 288
         # To test line 288, we need a command that's NOT registered directly
         # but exists in a group or has a different structure

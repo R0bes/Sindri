@@ -966,10 +966,10 @@ shell = "docker build . && docker push ."
         from typer.testing import CliRunner
         runner = CliRunner()
         
-        with patch('sindri.cli.subcommands.run_command') as mock_run:
+        with patch('sindri.cli.subcommands.run_command'):
             with patch('sys.argv', ['sindri', 'docker', 'bp']):
                 try:
-                    result = runner.invoke(namespace_app, ['bp'])
+                    runner.invoke(namespace_app, ['bp'])
                 except Exception:
                     pass
                 # Should have attempted to run with alias
@@ -993,10 +993,10 @@ shell = "docker build ."
         from typer.testing import CliRunner
         runner = CliRunner()
         
-        with patch('sindri.cli.subcommands.run_command') as mock_run:
+        with patch('sindri.cli.subcommands.run_command'):
             with patch('sys.argv', ['sindri', 'docker', 'build', '--tag', 'latest']):
                 try:
-                    result = runner.invoke(namespace_app, ['build'])
+                    runner.invoke(namespace_app, ['build'])
                 except Exception:
                     pass
                 # Should have attempted to run with additional args
@@ -1090,7 +1090,7 @@ groups = ["docker"]
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
@@ -1113,7 +1113,7 @@ shell = "docker build ."
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
@@ -1155,7 +1155,7 @@ shell = "docker build ."
 """)
         
         with patch('sys.argv', ['sindri', 'd']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
@@ -1173,7 +1173,7 @@ groups = ["quality"]
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.run_command') as mock_run:
+            with patch('sindri.cli.main.run_command'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
@@ -1191,7 +1191,7 @@ groups = [{"id": "docker", "title": "Docker", "commands": []}]
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()

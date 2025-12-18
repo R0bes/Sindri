@@ -404,7 +404,6 @@ class TestIsShellCommand:
     def test_is_shell_command_with_mock_command(self, tmp_path):
         """Test is_shell_command with mock command that returns shell."""
         mock_cmd = MagicMock()
-        ctx = ExecutionContext(cwd=tmp_path)
         mock_cmd.get_shell.return_value = "echo test"
         
         assert is_shell_command(mock_cmd) is True
@@ -412,7 +411,6 @@ class TestIsShellCommand:
     def test_is_shell_command_with_mock_command_no_shell(self, tmp_path):
         """Test is_shell_command with mock command that returns None."""
         mock_cmd = MagicMock()
-        ctx = ExecutionContext(cwd=tmp_path)
         mock_cmd.get_shell.return_value = None
         
         assert is_shell_command(mock_cmd) is False

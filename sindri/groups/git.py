@@ -170,13 +170,14 @@ class GitMonitorCommand(CustomCommand):
 class GitMonitorRunCommand(CustomCommand):
     """Monitor the latest GitHub Actions run after a push."""
 
-    def __init__(self) -> None:
+    def __init__(self, commit_sha: str | None = None) -> None:
         super().__init__(
             command_id="git-monitor-run",
             title="Monitor Run",
             description="Monitor the latest GitHub Actions workflow run (after push)",
             group_id="git",
         )
+        self.commit_sha = commit_sha
 
     async def execute(self, ctx: ExecutionContext) -> CommandResult:
         """Execute git monitor-run - watch the latest GitHub Actions run."""
@@ -207,13 +208,24 @@ class GitMonitorRunCommand(CustomCommand):
 
         # Get the latest run ID
         try:
-            # Get JSON output without jq to avoid shell quoting issues
-            get_run_result = await run_shell_command(
-                command_id="gh-run-list",
-                shell="gh run list --limit 1 --json databaseId,status,conclusion,displayTitle",
-                cwd=ctx.cwd,
-                env=ctx.get_env(),
-            )
+            # If we have a commit SHA, search for runs with that SHA
+            # Otherwise, just get the latest run
+            if self.commit_sha:
+                # Get runs and filter by commit SHA
+                get_run_result = await run_shell_command(
+                    command_id="gh-run-list",
+                    shell="gh run list --limit 10 --json databaseId,status,conclusion,displayTitle,headSha",
+                    cwd=ctx.cwd,
+                    env=ctx.get_env(),
+                )
+            else:
+                # Get JSON output without jq to avoid shell quoting issues
+                get_run_result = await run_shell_command(
+                    command_id="gh-run-list",
+                    shell="gh run list --limit 1 --json databaseId,status,conclusion,displayTitle,headSha",
+                    cwd=ctx.cwd,
+                    env=ctx.get_env(),
+                )
 
             if not get_run_result.success:
                 error_msg = get_run_result.stderr or get_run_result.error or "Unknown error"
@@ -239,7 +251,7 @@ class GitMonitorRunCommand(CustomCommand):
             # Parse the run ID from JSON (array with one element)
             import json
             try:
-                # Output is a JSON array, get first element
+                # Output is a JSON array
                 runs = json.loads(get_run_result.stdout.strip())
                 if not runs or len(runs) == 0:
                     return CommandResult(
@@ -247,7 +259,26 @@ class GitMonitorRunCommand(CustomCommand):
                         exit_code=1,
                         error="No GitHub Actions runs found. Make sure you're in a Git repository with GitHub Actions configured.",
                     )
-                run_data = runs[0]  # Get first run from array
+                
+                # If we have a commit SHA, find the run that matches it
+                if self.commit_sha:
+                    matching_run = None
+                    for run in runs:
+                        head_sha = run.get("headSha", "")
+                        # Compare first 7 characters (short SHA)
+                        if head_sha.startswith(self.commit_sha[:7]) or self.commit_sha.startswith(head_sha[:7]):
+                            matching_run = run
+                            break
+                    
+                    if not matching_run:
+                        # Fallback to first run if no match found
+                        ctx.stream_callback(f"Warning: No run found for commit {self.commit_sha[:7]}, using latest run.\n", "stderr")
+                        run_data = runs[0]
+                    else:
+                        run_data = matching_run
+                else:
+                    run_data = runs[0]  # Get first run from array
+                
                 run_id = str(run_data.get("databaseId", ""))
                 status = run_data.get("status", "unknown")
                 conclusion = run_data.get("conclusion", "")
@@ -416,9 +447,22 @@ class GitWorkflowCommand(CustomCommand):
                 error=f"Failed at step 'push': {push_result.error or 'Unknown error'}",
             )
 
+        # Get the current commit SHA to find the correct run
+        commit_sha_result = await run_shell_command(
+            command_id="git-rev-parse",
+            shell="git rev-parse HEAD",
+            cwd=ctx.cwd,
+            env=ctx.get_env(),
+        )
+        commit_sha = commit_sha_result.stdout.strip() if commit_sha_result.success else None
+
         # Step 4: Monitor run
         ctx.stream_callback("\nStep 4/4: Monitoring GitHub Actions run...\n", "stdout")
-        monitor_cmd = GitMonitorRunCommand()
+        # Wait a moment for GitHub to create the run
+        import asyncio
+        await asyncio.sleep(2)
+        
+        monitor_cmd = GitMonitorRunCommand(commit_sha=commit_sha)
         monitor_result = await monitor_cmd.execute(ctx)
         results.append(("monitor-run", monitor_result))
 

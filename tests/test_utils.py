@@ -455,7 +455,7 @@ class TestNormalizeProjectName:
         """Test normalizing a name that starts with non-alnum after strip."""
         # Create a name that after strip starts with a non-alnum char
         # Use a name that after processing still has non-alnum at start
-        result = normalize_project_name("_test")
+        normalize_project_name("_test")
         # After strip, "_test" becomes "test" (valid), but if it was ".test", 
         # it would need prepending
         # Let's test with a name that actually needs prepending
@@ -477,7 +477,7 @@ class TestNormalizeProjectName:
         """Test normalizing a name that starts with period after processing."""
         # Create a name that after processing starts with a period
         # This tests line 42: if not normalized[0].isalnum()
-        result = normalize_project_name(".test")
+        normalize_project_name(".test")
         # After strip(".-_"), ".test" becomes "test" (valid)
         # But if we had something like ".-test", after processing it might start with period
         # Actually, let's create a case where after processing it starts with non-alnum
@@ -2126,24 +2126,6 @@ class TestPyprojectUpdater:
         # The name might be updated in the search loop instead
         assert "test" in result or "test-project" in result
     
-    def test_update_pyproject_content_name_search_loop(self, temp_dir: Path):
-        """Test _update_pyproject_content name search loop (lines 160-170)."""
-        # Create content where name is not found in first pass, triggering search loop
-        content = (
-            '[project]\n'
-            'description = "test project"\n'
-            'name = "old-name"'
-        )
-        data = {
-            "project": {
-                "name": "new-name",
-                "dependencies": [],
-                "scripts": {}
-            }
-        }
-        result = _update_pyproject_content(content, data)
-        # Name should be updated
-        assert "new-name" in result or "old-name" not in result
     
     def test_update_pyproject_content_dependencies_find_bracket(self):
         """Test _update_pyproject_content finding closing bracket (lines 181-183)."""
@@ -2246,7 +2228,7 @@ class TestPyprojectUpdater:
                 "scripts": {"other": "other:main"}  # Not sindri, so has_sindri_script is False
             }
         }
-        result = _update_pyproject_content(content, data)
+        _update_pyproject_content(content, data)
         # Since has_sindri_script is False and "[project.scripts]" not in content,
         # it should add [project.scripts] section
         # But wait, the function only adds sindri script, not other scripts

@@ -166,7 +166,7 @@ groups = ["docker"]
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         from sindri.cli.main import main

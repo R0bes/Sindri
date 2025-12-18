@@ -216,7 +216,7 @@ class TestGeneralGroup:
         )
 
         cmd = SetupInstallCommand()
-        result = await cmd.execute(mock_ctx)
+        await cmd.execute(mock_ctx)
 
         # Should have called run_shell_command at least once (for venv creation and install)
         assert mock_run.call_count >= 1
@@ -764,11 +764,19 @@ class TestGitGroup:
         """Test GitWorkflowCommand."""
         mock_ctx_with_stream.config.project_name = "test-project"
         
-        mock_run.side_effect = [
-            CommandResult(command_id="git-add", exit_code=0),
-            CommandResult(command_id="git-commit", exit_code=0),
-            CommandResult(command_id="git-push", exit_code=0),
-        ]
+        def run_side_effect(*args, **kwargs):
+            command_id = kwargs.get("command_id", "")
+            if "git-add" in command_id:
+                return CommandResult(command_id="git-add", exit_code=0)
+            elif "git-commit" in command_id:
+                return CommandResult(command_id="git-commit", exit_code=0)
+            elif "git-push" in command_id:
+                return CommandResult(command_id="git-push", exit_code=0)
+            elif "git-rev-parse" in command_id:
+                return CommandResult(command_id="git-rev-parse", exit_code=0, stdout="abc1234")
+            return CommandResult(command_id=command_id, exit_code=0)
+        
+        mock_run.side_effect = run_side_effect
 
         cmd = GitWorkflowCommand()
         
@@ -777,7 +785,8 @@ class TestGitGroup:
             command_id="git-monitor-run",
             exit_code=0,
         )):
-            result = await cmd.execute(mock_ctx_with_stream)
+            with patch("asyncio.sleep"):  # Skip the sleep
+                result = await cmd.execute(mock_ctx_with_stream)
 
         assert result.success
 
@@ -877,13 +886,14 @@ class TestGitGroup:
         """Test GitMonitorRunCommand with completed run."""
         import json
         
-        run_data = {
+        run_data = [{
             "databaseId": "123456",
             "status": "completed",
             "conclusion": "success",
             "displayTitle": "Test Run",
-        }
-        
+            "headSha": "abc1234",
+        }]
+
         def run_side_effect(*args, **kwargs):
             command_id = kwargs.get("command_id", "")
             if "gh-check" in command_id:
@@ -939,10 +949,11 @@ class TestGitGroup:
         """Test GitMonitorRunCommand when run ID is missing."""
         import json
         
-        run_data = {
+        run_data = [{
             "status": "completed",
             "conclusion": "success",
-        }
+            "headSha": "abc1234",
+        }]
         
         def run_side_effect(*args, **kwargs):
             command_id = kwargs.get("command_id", "")
@@ -972,12 +983,13 @@ class TestGitGroup:
         """Test GitMonitorRunCommand watches running workflow."""
         import json
         
-        run_data = {
+        run_data = [{
             "databaseId": "123456",
             "status": "in_progress",
             "conclusion": None,
             "displayTitle": "Test Run",
-        }
+            "headSha": "abc1234",
+        }]
         
         def run_side_effect(*args, **kwargs):
             command_id = kwargs.get("command_id", "")
@@ -1012,10 +1024,11 @@ class TestGitGroup:
         """Test GitMonitorRunCommand handles KeyboardInterrupt."""
         import json
         
-        run_data = {
+        run_data = [{
             "databaseId": "123456",
             "status": "in_progress",
-        }
+            "headSha": "abc1234",
+        }]
         
         def run_side_effect(*args, **kwargs):
             command_id = kwargs.get("command_id", "")
