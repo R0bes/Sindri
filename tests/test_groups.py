@@ -274,7 +274,7 @@ class TestQualityGroup:
         assert any(cmd.id == "typecheck" for cmd in commands)
         assert any(cmd.id == "test" for cmd in commands)
         assert any(cmd.id == "test-cov" for cmd in commands)
-        assert any(cmd.id == "quality-check" for cmd in commands)
+        assert any(cmd.id == "check" for cmd in commands)
 
 
 class TestApplicationGroup:
