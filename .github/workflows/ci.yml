@@ -32,7 +32,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest tests/ -v --cov=sindri --cov-report=term-missing --cov-report=xml
+          python -m pytest tests/ -v --cov=sindri --cov-report=term-missing --cov-report=xml --cov-fail-under=60
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'

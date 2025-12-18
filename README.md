@@ -1,6 +1,12 @@
+<div align="center">
+
+![Sindri Logo](assets/logo.png)
+
 # Sindri
 
 A project-configurable command palette for common dev workflows. Sindri provides an interactive TUI (Text User Interface) and CLI for managing project-specific commands, making it easy to run setup, build, test, and deployment tasks.
+
+</div>
 
 ## Features
 

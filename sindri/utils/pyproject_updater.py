@@ -173,25 +173,43 @@ def _update_pyproject_content(content: str, data: dict) -> str:
     content_lower = "\n".join(result).lower()
     
     # Add sindri dependency if needed
-    if not has_sindri_dep and project_idx >= 0 and "sindri" not in content_lower:
-        if dependencies_idx >= 0:
-            # Dependencies section exists, find closing bracket
-            for i in range(dependencies_idx + 1, len(result)):
-                if result[i].strip() == "]":
-                    indent = " " * max(4, len(result[i]) - len(result[i].lstrip()))
-                    result.insert(i, f'{indent}"sindri",')
-                    break
-        else:
-            # No dependencies section, add it after [project]
-            insert_pos = project_idx + 1
-            # Find end of project section (next [section] or end of file)
-            for i in range(project_idx + 1, len(result)):
-                if result[i].strip().startswith("["):
-                    insert_pos = i
-                    break
-            result.insert(insert_pos, 'dependencies = [')
-            result.insert(insert_pos + 1, '    "sindri",')
-            result.insert(insert_pos + 2, ']')
+    # Always add sindri if it's in the data dict and not in content
+    if project_idx >= 0 and "sindri" not in content_lower:
+        # Check if sindri should be added (it's in data dependencies)
+        should_add_sindri = has_sindri_dep or any("sindri" in str(dep).lower() for dep in dependencies)
+        if should_add_sindri:
+            if dependencies_idx >= 0:
+                # Dependencies section exists, find closing bracket
+                dep_line = result[dependencies_idx]
+                # Check if closing bracket is on the same line
+                if "]" in dep_line:
+                    # Closing bracket is on same line, need to insert before it
+                    bracket_pos = dep_line.rfind("]")
+                    before_bracket = dep_line[:bracket_pos].rstrip()
+                    # Remove trailing comma if present
+                    if before_bracket.endswith(","):
+                        before_bracket = before_bracket[:-1].rstrip()
+                    # Add sindri before closing bracket
+                    indent = " " * (len(dep_line) - len(dep_line.lstrip()))
+                    result[dependencies_idx] = f'{before_bracket},\n{indent}    "sindri"]'
+                else:
+                    # Closing bracket is on separate line, find it
+                    for i in range(dependencies_idx + 1, len(result)):
+                        if result[i].strip() == "]":
+                            indent = " " * max(4, len(result[i]) - len(result[i].lstrip()))
+                            result.insert(i, f'{indent}"sindri",')
+                            break
+            else:
+                # No dependencies section, add it after [project]
+                insert_pos = project_idx + 1
+                # Find end of project section (next [section] or end of file)
+                for i in range(project_idx + 1, len(result)):
+                    if result[i].strip().startswith("["):
+                        insert_pos = i
+                        break
+                result.insert(insert_pos, 'dependencies = [')
+                result.insert(insert_pos + 1, '    "sindri",')
+                result.insert(insert_pos + 2, ']')
     
     # Add sindri script if needed
     if not has_sindri_script and "[project.scripts]" not in content_lower:

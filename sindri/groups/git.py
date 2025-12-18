@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Optional
+import asyncio
+from typing import TYPE_CHECKING, Optional
 
-from sindri.core.command import ShellCommand
+from sindri.core.command import CustomCommand, ShellCommand
 from sindri.core.group import CommandGroup
+from sindri.core.result import CommandResult
+
+if TYPE_CHECKING:
+    from sindri.core.context import ExecutionContext
 
 
 class GitGroup(CommandGroup):
@@ -37,6 +42,9 @@ class GitGroup(CommandGroup):
                 description="Show working tree status",
                 group_id=self.id,
             ),
+            GitMonitorCommand(),
+            GitMonitorRunCommand(),
+            GitWorkflowCommand(),
             ShellCommand(
                 id="git-add",
                 shell="git add -A",
@@ -77,3 +85,315 @@ class GitGroup(CommandGroup):
     def get_commands(self):
         """Get all commands in this group."""
         return self._commands
+
+
+class GitMonitorCommand(CustomCommand):
+    """Monitor Git status continuously."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            command_id="git-monitor",
+            title="Monitor",
+            description="Continuously monitor Git status (updates every 2 seconds)",
+            group_id="git",
+        )
+
+    async def execute(self, ctx: ExecutionContext) -> CommandResult:
+        """Execute git monitor - continuously show git status."""
+        from sindri.core.shell_runner import run_shell_command
+
+        ctx.stream_callback("Monitoring Git status... (Press Ctrl+C to stop)\n", "stdout")
+
+        # Track previous status to detect changes
+        previous_status = None
+        iteration = 0
+
+        try:
+            while True:
+                # Run git status
+                result = await run_shell_command(
+                    command_id="git-status",
+                    shell="git status --short",
+                    cwd=ctx.cwd,
+                    env=ctx.get_env(),
+                )
+
+                current_status = result.stdout.strip()
+
+                # Only show if status changed or first iteration
+                if current_status != previous_status or iteration == 0:
+                    # Clear screen (ANSI escape code)
+                    ctx.stream_callback("\033[2J\033[H", "stdout")
+                    ctx.stream_callback(f"=== Git Status Monitor (Iteration {iteration + 1}) ===\n", "stdout")
+                    ctx.stream_callback(f"Working Directory: {ctx.cwd}\n\n", "stdout")
+
+                    if current_status:
+                        ctx.stream_callback("Changes detected:\n", "stdout")
+                        for line in current_status.split("\n"):
+                            if line.strip():
+                                ctx.stream_callback(f"  {line}\n", "stdout")
+                    else:
+                        ctx.stream_callback("Working tree clean\n", "stdout")
+
+                    # Show branch info
+                    branch_result = await run_shell_command(
+                        command_id="git-branch",
+                        shell="git branch --show-current",
+                        cwd=ctx.cwd,
+                        env=ctx.get_env(),
+                    )
+                    branch = branch_result.stdout.strip()
+                    if branch:
+                        ctx.stream_callback(f"\nCurrent branch: {branch}\n", "stdout")
+
+                    ctx.stream_callback("\nPress Ctrl+C to stop monitoring\n", "stdout")
+                    previous_status = current_status
+
+                iteration += 1
+                await asyncio.sleep(2)  # Update every 2 seconds
+
+        except KeyboardInterrupt:
+            ctx.stream_callback("\n\nMonitoring stopped.\n", "stdout")
+            return CommandResult(
+                command_id=self.id,
+                exit_code=0,
+                stdout="Monitoring stopped by user",
+            )
+        except Exception as e:
+            return CommandResult(
+                command_id=self.id,
+                exit_code=1,
+                error=f"Error monitoring Git status: {str(e)}",
+            )
+
+
+class GitMonitorRunCommand(CustomCommand):
+    """Monitor the latest GitHub Actions run after a push."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            command_id="git-monitor-run",
+            title="Monitor Run",
+            description="Monitor the latest GitHub Actions workflow run (after push)",
+            group_id="git",
+        )
+
+    async def execute(self, ctx: ExecutionContext) -> CommandResult:
+        """Execute git monitor-run - watch the latest GitHub Actions run."""
+        from sindri.core.shell_runner import run_shell_command
+
+        # Check if gh CLI is available
+        try:
+            check_result = await run_shell_command(
+                command_id="gh-check",
+                shell="gh --version",
+                cwd=ctx.cwd,
+                env=ctx.get_env(),
+            )
+            if not check_result.success:
+                return CommandResult(
+                    command_id=self.id,
+                    exit_code=1,
+                    error="GitHub CLI (gh) is not available. Please install it: https://cli.github.com/",
+                )
+        except Exception as e:
+            return CommandResult(
+                command_id=self.id,
+                exit_code=1,
+                error=f"Error checking GitHub CLI: {str(e)}",
+            )
+
+        ctx.stream_callback("Finding latest GitHub Actions run...\n", "stdout")
+
+        # Get the latest run ID
+        try:
+            get_run_result = await run_shell_command(
+                command_id="gh-run-list",
+                shell="gh run list --limit 1 --json databaseId,status,conclusion,displayTitle --jq '.[0]'",
+                cwd=ctx.cwd,
+                env=ctx.get_env(),
+            )
+
+            if not get_run_result.success or not get_run_result.stdout.strip():
+                return CommandResult(
+                    command_id=self.id,
+                    exit_code=1,
+                    error="No GitHub Actions runs found. Make sure you're in a Git repository with GitHub Actions configured.",
+                )
+
+            # Parse the run ID from JSON (simple extraction)
+            import json
+            try:
+                run_data = json.loads(get_run_result.stdout.strip())
+                run_id = str(run_data.get("databaseId", ""))
+                status = run_data.get("status", "unknown")
+                conclusion = run_data.get("conclusion", "")
+                title = run_data.get("displayTitle", "Unknown")
+
+                if not run_id:
+                    return CommandResult(
+                        command_id=self.id,
+                        exit_code=1,
+                        error="Could not determine run ID from GitHub CLI output.",
+                    )
+
+                ctx.stream_callback(f"Found run: {title}\n", "stdout")
+                ctx.stream_callback(f"Status: {status} {f'({conclusion})' if conclusion else ''}\n", "stdout")
+                ctx.stream_callback(f"Run ID: {run_id}\n\n", "stdout")
+
+                # If already completed, just show the result
+                if status == "completed":
+                    ctx.stream_callback("Run is already completed. Showing details...\n\n", "stdout")
+                    view_result = await run_shell_command(
+                        command_id="gh-run-view",
+                        shell=f"gh run view {run_id}",
+                        cwd=ctx.cwd,
+                        env=ctx.get_env(),
+                    )
+                    return CommandResult(
+                        command_id=self.id,
+                        exit_code=0 if conclusion == "success" else 1,
+                        stdout=view_result.stdout,
+                        stderr=view_result.stderr,
+                    )
+
+                # Watch the run
+                ctx.stream_callback(f"Watching run {run_id}... (Press Ctrl+C to stop)\n\n", "stdout")
+
+                # Use gh run watch with streaming
+                watch_result = await run_shell_command(
+                    command_id="gh-run-watch",
+                    shell=f"gh run watch {run_id} --exit-status",
+                    cwd=ctx.cwd,
+                    env=ctx.get_env(),
+                    stream_callback=ctx.stream_callback,
+                )
+
+                return CommandResult(
+                    command_id=self.id,
+                    exit_code=watch_result.exit_code,
+                    stdout=watch_result.stdout,
+                    stderr=watch_result.stderr,
+                )
+
+            except json.JSONDecodeError:
+                return CommandResult(
+                    command_id=self.id,
+                    exit_code=1,
+                    error="Could not parse GitHub CLI output. Make sure you're authenticated: gh auth login",
+                )
+
+        except KeyboardInterrupt:
+            ctx.stream_callback("\n\nMonitoring stopped.\n", "stdout")
+            return CommandResult(
+                command_id=self.id,
+                exit_code=0,
+                stdout="Monitoring stopped by user",
+            )
+        except Exception as e:
+            return CommandResult(
+                command_id=self.id,
+                exit_code=1,
+                error=f"Error monitoring GitHub Actions run: {str(e)}",
+            )
+
+
+class GitWorkflowCommand(CustomCommand):
+    """Execute full Git workflow: add, commit, push, and monitor run."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            command_id="git-workflow",
+            title="Workflow",
+            description="Execute full workflow: add, commit, push, and monitor GitHub Actions run",
+            group_id="git",
+        )
+
+    async def execute(self, ctx: ExecutionContext) -> CommandResult:
+        """Execute git workflow - add, commit, push, and monitor run."""
+        from sindri.core.shell_runner import run_shell_command
+
+        results = []
+        commit_message = ctx.config.project_name if ctx.config else "Update"
+
+        # Step 1: Add all changes
+        ctx.stream_callback("Step 1/4: Staging all changes...\n", "stdout")
+        add_result = await run_shell_command(
+            command_id="git-add",
+            shell="git add -A",
+            cwd=ctx.cwd,
+            env=ctx.get_env(),
+            stream_callback=ctx.stream_callback,
+        )
+        results.append(("add", add_result))
+        if not add_result.success:
+            return CommandResult(
+                command_id=self.id,
+                exit_code=add_result.exit_code,
+                stdout="\n".join([f"{step}: {r.stdout}" for step, r in results]),
+                stderr="\n".join([f"{step}: {r.stderr}" for step, r in results if r.stderr]),
+                error=f"Failed at step 'add': {add_result.error or 'Unknown error'}",
+            )
+
+        # Step 2: Commit
+        ctx.stream_callback(f"\nStep 2/4: Committing changes with message '{commit_message}'...\n", "stdout")
+        commit_result = await run_shell_command(
+            command_id="git-commit",
+            shell=f"git commit -m '{commit_message}'",
+            cwd=ctx.cwd,
+            env=ctx.get_env(),
+            stream_callback=ctx.stream_callback,
+        )
+        results.append(("commit", commit_result))
+        if not commit_result.success:
+            # Check if there's nothing to commit
+            if "nothing to commit" in commit_result.stdout.lower() or "nothing to commit" in commit_result.stderr.lower():
+                ctx.stream_callback("Nothing to commit, skipping commit step.\n", "stdout")
+            else:
+                return CommandResult(
+                    command_id=self.id,
+                    exit_code=commit_result.exit_code,
+                    stdout="\n".join([f"{step}: {r.stdout}" for step, r in results]),
+                    stderr="\n".join([f"{step}: {r.stderr}" for step, r in results if r.stderr]),
+                    error=f"Failed at step 'commit': {commit_result.error or 'Unknown error'}",
+                )
+
+        # Step 3: Push
+        ctx.stream_callback("\nStep 3/4: Pushing to remote...\n", "stdout")
+        push_result = await run_shell_command(
+            command_id="git-push",
+            shell="git push",
+            cwd=ctx.cwd,
+            env=ctx.get_env(),
+            stream_callback=ctx.stream_callback,
+        )
+        results.append(("push", push_result))
+        if not push_result.success:
+            return CommandResult(
+                command_id=self.id,
+                exit_code=push_result.exit_code,
+                stdout="\n".join([f"{step}: {r.stdout}" for step, r in results]),
+                stderr="\n".join([f"{step}: {r.stderr}" for step, r in results if r.stderr]),
+                error=f"Failed at step 'push': {push_result.error or 'Unknown error'}",
+            )
+
+        # Step 4: Monitor run
+        ctx.stream_callback("\nStep 4/4: Monitoring GitHub Actions run...\n", "stdout")
+        monitor_cmd = GitMonitorRunCommand()
+        monitor_result = await monitor_cmd.execute(ctx)
+        results.append(("monitor-run", monitor_result))
+
+        # Combine all results
+        combined_stdout = "\n".join([f"=== {step.upper()} ===" for step, _ in results])
+        combined_stdout += "\n" + "\n".join([f"{step}: {r.stdout}" for step, r in results if r.stdout])
+        combined_stderr = "\n".join([f"{step}: {r.stderr}" for step, r in results if r.stderr])
+
+        # Return success if all steps succeeded
+        all_success = all(r.success for _, r in results)
+        return CommandResult(
+            command_id=self.id,
+            exit_code=0 if all_success else 1,
+            stdout=combined_stdout,
+            stderr=combined_stderr if combined_stderr else None,
+            error=None if all_success else "One or more workflow steps failed",
+        )

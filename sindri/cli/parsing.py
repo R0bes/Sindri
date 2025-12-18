@@ -20,6 +20,7 @@ NAMESPACE_ALIASES = {
 # Command action aliases (short -> full)
 ACTION_ALIASES = {
     "bp": "build_and_push",
+    "wf": "workflow",
 }
 
 

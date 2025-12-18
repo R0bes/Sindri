@@ -10,7 +10,7 @@ from rich.table import Table
 
 from sindri.cli.commands import run as run_command
 from sindri.cli.display import console
-from sindri.cli.parsing import format_command_id_for_display, NAMESPACE_ALIASES
+from sindri.cli.parsing import format_command_id_for_display, NAMESPACE_ALIASES, ACTION_ALIASES
 from sindri.config import load_config
 
 
@@ -121,6 +121,9 @@ def create_namespace_subcommand(namespace: str) -> typer.Typer:
         # If action provided, try to run it
         if action:
             try:
+                # Resolve action alias (e.g., "wf" -> "workflow")
+                resolved_action = ACTION_ALIASES.get(action, action)
+                
                 # Get raw args from sys.argv to capture flags
                 import sys
                 args = sys.argv[1:]
@@ -140,13 +143,13 @@ def create_namespace_subcommand(namespace: str) -> typer.Typer:
                     aliases = reverse_aliases.get(namespace, [])
                     if arg == namespace or arg in aliases:
                         namespace_idx = i
-                    elif namespace_idx >= 0 and arg == action:
+                    elif namespace_idx >= 0 and (arg == action or arg == resolved_action):
                         action_idx = i
                         # Collect everything after action as additional args
                         remaining_args = args[action_idx + 1:]
                         break
                 
-                command_parts = [namespace, action] + remaining_args
+                command_parts = [namespace, resolved_action] + remaining_args
                 run_command(
                     command_parts=command_parts,
                     config=config,
@@ -180,10 +183,11 @@ def register_namespace_subcommands(
         "quality": ["q"],
         "application": ["app", "a"],
         "pypi": ["p"],
+        "docs": [],
     }
 
-    # Always register version namespace (it's built-in)
-    always_register = {"version"}
+    # Always register built-in namespaces
+    always_register = {"version", "git", "docker", "compose", "quality", "application", "pypi", "docs"}
 
     # Try to load config to see which namespaces are configured
     try:
@@ -202,17 +206,20 @@ def register_namespace_subcommands(
             "compose",
             "git",
             "version",
+            "quality",
+            "application",
             "pypi",
+            "docs",
         }
 
     # Register configured namespaces
     for namespace in configured_namespaces:
-        if namespace in namespace_aliases:
-            # Create namespace subcommand
-            namespace_app = create_namespace_subcommand(namespace)
-            app.add_typer(namespace_app, name=namespace)
+        # Create namespace subcommand
+        namespace_app = create_namespace_subcommand(namespace)
+        app.add_typer(namespace_app, name=namespace)
 
-            # Register aliases if any
+        # Register aliases if any
+        if namespace in namespace_aliases:
             for alias in namespace_aliases[namespace]:
                 alias_app = create_namespace_subcommand(namespace)
                 app.add_typer(alias_app, name=alias)

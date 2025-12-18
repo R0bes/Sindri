@@ -18,7 +18,8 @@ from sindri.cli.subcommands import register_namespace_subcommands
 app.add_typer(config_app)
 
 # Register namespace subcommands (only configured ones)
-register_namespace_subcommands(app)
+from pathlib import Path
+register_namespace_subcommands(app, Path.cwd())
 
 
 @app.command("init")

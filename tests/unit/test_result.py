@@ -155,3 +155,67 @@ class TestCommandResult:
         with pytest.raises(RuntimeError) as exc_info:
             result.raise_on_error()
         assert "127" in str(exc_info.value)
+    
+    def test_to_dict(self):
+        """to_dict should convert result to dictionary."""
+        result = CommandResult(
+            command_id="test",
+            exit_code=0,
+            stdout="output",
+            stderr="error",
+            error=None,
+            duration=1.5,
+            metadata={"key": "value"},
+        )
+        
+        result_dict = result.to_dict()
+        
+        assert result_dict["command_id"] == "test"
+        assert result_dict["exit_code"] == 0
+        assert result_dict["stdout"] == "output"
+        assert result_dict["stderr"] == "error"
+        assert result_dict["error"] is None
+        assert result_dict["duration"] == 1.5
+        assert result_dict["success"] is True
+        assert result_dict["metadata"] == {"key": "value"}
+    
+    def test_to_dict_failure(self):
+        """to_dict should include success=False for failures."""
+        result = CommandResult(
+            command_id="test",
+            exit_code=1,
+            error="Failed",
+        )
+        
+        result_dict = result.to_dict()
+        
+        assert result_dict["success"] is False
+        assert result_dict["exit_code"] == 1
+        assert result_dict["error"] == "Failed"
+    
+    def test_failure_classmethod(self):
+        """failure classmethod should create failure result."""
+        result = CommandResult.failure("test", "Something went wrong")
+        
+        assert not result.success
+        assert result.exit_code == 1
+        assert result.error == "Something went wrong"
+        assert result.command_id == "test"
+    
+    def test_failure_classmethod_with_exit_code(self):
+        """failure classmethod should accept custom exit code."""
+        result = CommandResult.failure("test", "Error", exit_code=127)
+        
+        assert not result.success
+        assert result.exit_code == 127
+        assert result.error == "Error"
+    
+    def test_dry_run_classmethod(self):
+        """dry_run classmethod should create dry run result."""
+        result = CommandResult.dry_run("test", "echo 'Hello World'")
+        
+        assert result.success
+        assert result.exit_code == 0
+        assert "[DRY RUN]" in result.stdout or "DRY RUN" in result.stdout
+        assert "echo 'Hello World'" in result.stdout
+        assert result.metadata.get("dry_run") is True

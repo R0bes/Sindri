@@ -151,6 +151,18 @@ class TestExecutionContextResolvePath:
         # Just check it's still absolute
         assert result.is_absolute()
     
+    def test_resolve_absolute_path_string(self, tmp_path):
+        """Should return absolute paths unchanged when passed as string."""
+        ctx = ExecutionContext(cwd=tmp_path)
+        # Create an absolute path
+        absolute = tmp_path.resolve() / "absolute" / "path"
+        absolute.parent.mkdir(parents=True, exist_ok=True)
+        
+        result = ctx.resolve_path(str(absolute))
+        # Should return the absolute path directly
+        assert result == absolute
+        assert result.is_absolute()
+    
     def test_resolve_relative_path(self, tmp_path):
         """Should resolve relative paths from cwd."""
         ctx = ExecutionContext(cwd=tmp_path)
@@ -195,6 +207,17 @@ class TestExecutionContextChild:
         child = ctx.child(cwd=new_cwd)
         
         assert child.cwd == new_cwd
+        assert ctx.cwd == tmp_path  # Parent unchanged
+    
+    def test_child_can_override_cwd_relative(self, tmp_path):
+        """Child can override cwd with relative path."""
+        ctx = ExecutionContext(cwd=tmp_path)
+        subdir = tmp_path / "subdir"
+        subdir.mkdir()
+        
+        child = ctx.child(cwd="subdir")
+        
+        assert child.cwd == subdir.resolve()
         assert ctx.cwd == tmp_path  # Parent unchanged
     
     def test_child_can_override_flags(self, tmp_path):
@@ -253,3 +276,137 @@ class TestExecutionContextTemplateEngine:
         
         result = ctx.expand_templates("{custom}")
         assert result == "custom_value"
+
+
+class TestExecutionContextWithCwd:
+    """Tests for with_cwd() method."""
+    
+    def test_with_cwd_absolute_path(self, tmp_path):
+        """with_cwd should accept absolute path."""
+        ctx = ExecutionContext(cwd=tmp_path)
+        new_cwd = tmp_path / "subdir"
+        new_cwd.mkdir()
+        
+        new_ctx = ctx.with_cwd(new_cwd)
+        
+        assert new_ctx.cwd == new_cwd
+        assert ctx.cwd == tmp_path  # Original unchanged
+    
+    def test_with_cwd_relative_path(self, tmp_path):
+        """with_cwd should resolve relative paths."""
+        ctx = ExecutionContext(cwd=tmp_path)
+        subdir = tmp_path / "subdir"
+        subdir.mkdir()
+        
+        new_ctx = ctx.with_cwd("subdir")
+        
+        assert new_ctx.cwd == subdir.resolve()
+        assert ctx.cwd == tmp_path  # Original unchanged
+    
+    def test_with_cwd_string_path(self, tmp_path):
+        """with_cwd should accept string paths."""
+        ctx = ExecutionContext(cwd=tmp_path)
+        subdir = tmp_path / "subdir"
+        subdir.mkdir()
+        
+        new_ctx = ctx.with_cwd(str(subdir))
+        
+        assert new_ctx.cwd == subdir.resolve()
+    
+    def test_with_cwd_inherits_other_values(self, tmp_path):
+        """with_cwd should inherit other context values."""
+        mock_config = MagicMock()
+        ctx = ExecutionContext(
+            cwd=tmp_path,
+            config=mock_config,
+            env={"KEY": "value"},
+            dry_run=True,
+            verbose=True,
+        )
+        
+        new_ctx = ctx.with_cwd(tmp_path / "subdir")
+        
+        assert new_ctx.config == mock_config
+        assert new_ctx.env == {"KEY": "value"}
+        assert new_ctx.dry_run is True
+        assert new_ctx.verbose is True
+
+
+class TestExecutionContextWithEnv:
+    """Tests for with_env() method."""
+    
+    def test_with_env_adds_variables(self, tmp_path):
+        """with_env should add environment variables."""
+        ctx = ExecutionContext(cwd=tmp_path, env={"A": "1"})
+        
+        new_ctx = ctx.with_env(B="2", C="3")
+        
+        assert new_ctx.env == {"A": "1", "B": "2", "C": "3"}
+        assert ctx.env == {"A": "1"}  # Original unchanged
+    
+    def test_with_env_overrides_existing(self, tmp_path):
+        """with_env should override existing variables."""
+        ctx = ExecutionContext(cwd=tmp_path, env={"A": "1", "B": "2"})
+        
+        new_ctx = ctx.with_env(B="3")
+        
+        assert new_ctx.env == {"A": "1", "B": "3"}
+    
+    def test_with_env_inherits_other_values(self, tmp_path):
+        """with_env should inherit other context values."""
+        mock_config = MagicMock()
+        ctx = ExecutionContext(
+            cwd=tmp_path,
+            config=mock_config,
+            dry_run=True,
+            verbose=True,
+        )
+        
+        new_ctx = ctx.with_env(KEY="value")
+        
+        assert new_ctx.cwd == tmp_path
+        assert new_ctx.config == mock_config
+        assert new_ctx.dry_run is True
+        assert new_ctx.verbose is True
+
+
+class TestExecutionContextCreate:
+    """Tests for create() classmethod."""
+    
+    def test_create_defaults_to_current_dir(self):
+        """create should default to current directory."""
+        ctx = ExecutionContext.create()
+        
+        assert ctx.cwd == Path.cwd().resolve()
+    
+    def test_create_with_cwd_string(self, tmp_path):
+        """create should accept string cwd."""
+        ctx = ExecutionContext.create(cwd=str(tmp_path))
+        
+        assert ctx.cwd == tmp_path.resolve()
+    
+    def test_create_with_cwd_path(self, tmp_path):
+        """create should accept Path cwd."""
+        ctx = ExecutionContext.create(cwd=tmp_path)
+        
+        assert ctx.cwd == tmp_path.resolve()
+    
+    def test_create_with_config(self, tmp_path):
+        """create should accept config."""
+        mock_config = MagicMock()
+        ctx = ExecutionContext.create(cwd=tmp_path, config=mock_config)
+        
+        assert ctx.config == mock_config
+    
+    def test_create_with_kwargs(self, tmp_path):
+        """create should accept additional kwargs."""
+        ctx = ExecutionContext.create(
+            cwd=tmp_path,
+            env={"KEY": "value"},
+            dry_run=True,
+            verbose=True,
+        )
+        
+        assert ctx.env == {"KEY": "value"}
+        assert ctx.dry_run is True
+        assert ctx.verbose is True

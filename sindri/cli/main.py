@@ -68,16 +68,18 @@ def _is_project_command(
         config_path = Path(config).resolve() if config else None
         sindri_config = load_config(config_path, Path.cwd())
 
-        # Try to find the command
-        cmd = find_command_by_parts(sindri_config, command_parts)
+        # Initialize registry to check built-in groups AND config commands
+        from sindri.cli.commands import _init_registry
+        
+        registry = _init_registry(sindri_config)
+        
+        # Remove flags from command parts for checking
+        filtered_parts = [p for p in command_parts if not p.startswith("-")]
+        
+        # Try to resolve command using registry (includes built-in groups)
+        cmd = registry.resolve_parts(filtered_parts)
         if cmd:
             return True
-
-        # Also try as single command ID
-        if len(command_parts) == 1:
-            cmd = sindri_config.get_command_by_id(command_parts[0])
-            if cmd:
-                return True
 
         return False
     except (FileNotFoundError, ValueError):  # noqa: BLE001
@@ -104,6 +106,7 @@ def main() -> None:
             "docker",
             "compose",
             "git",
+            "docs",
         ]:
             try:
                 from collections import defaultdict

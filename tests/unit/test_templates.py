@@ -105,6 +105,118 @@ class TestTemplateEngineExpand:
         """cwd should expand to working directory."""
         result = engine.expand("{cwd}", ctx)
         assert result == str(ctx.cwd)
+    
+    def test_expand_registry_fallback(self, engine, tmp_path):
+        """registry should fallback to localhost:5000 if no defaults (line 36)."""
+        ctx = ExecutionContext(cwd=tmp_path)
+        
+        result = engine.expand("{registry}", ctx)
+        assert result == "localhost:5000"
+    
+    def test_expand_workspace(self, engine, ctx):
+        """workspace should expand to cwd (line 46)."""
+        result = engine.expand("{workspace}", ctx)
+        assert result == str(ctx.cwd)
+    
+    def test_get_project_version_with_pyproject(self, tmp_path):
+        """Test _get_project_version with pyproject.toml."""
+        from sindri.core.templates import _get_project_version
+        
+        # Create pyproject.toml with version
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text('[project]\nversion = "1.2.3"', encoding="utf-8")
+        
+        version = _get_project_version(tmp_path)
+        assert version == "1.2.3"
+    
+    def test_get_project_version_without_pyproject(self, tmp_path):
+        """Test _get_project_version without pyproject.toml."""
+        from sindri.core.templates import _get_project_version
+        
+        version = _get_project_version(tmp_path)
+        assert version == "latest"
+    
+    def test_get_project_version_with_poetry(self, tmp_path):
+        """Test _get_project_version with poetry section."""
+        from sindri.core.templates import _get_project_version
+        
+        # Create pyproject.toml with poetry version
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text('[tool.poetry]\nversion = "2.3.4"', encoding="utf-8")
+        
+        version = _get_project_version(tmp_path)
+        assert version == "2.3.4"
+    
+    def test_get_project_version_exception_handling(self, tmp_path):
+        """Test _get_project_version handles exceptions."""
+        from sindri.core.templates import _get_project_version
+        
+        # Create invalid pyproject.toml
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("invalid toml content!!!", encoding="utf-8")
+        
+        version = _get_project_version(tmp_path)
+        # Should return "latest" on exception
+        assert version == "latest"
+    
+    def test_get_project_version_no_version_in_sections(self, tmp_path):
+        """Test _get_project_version returns latest when no version found (line 217)."""
+        from sindri.core.templates import _get_project_version
+        
+        # Create pyproject.toml without version
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text('[project]\nname = "test"', encoding="utf-8")
+        
+        version = _get_project_version(tmp_path)
+        assert version == "latest"
+    
+    def test_get_project_version_tomli_import_error(self, tmp_path):
+        """Test _get_project_version handles tomli import error (lines 198-202)."""
+        from sindri.core.templates import _get_project_version
+        from unittest.mock import patch, MagicMock
+        
+        # Create pyproject.toml with version
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text('[project]\nversion = "1.0.0"', encoding="utf-8")
+        
+        # Mock both tomllib and tomli imports to fail
+        original_import = __import__
+        def mock_import(name, *args, **kwargs):
+            if name in ("tomllib", "tomli"):
+                raise ImportError(f"No module named '{name}'")
+            return original_import(name, *args, **kwargs)
+        
+        with patch("builtins.__import__", side_effect=mock_import):
+            # Should return "latest" when both imports fail (line 202)
+            version = _get_project_version(tmp_path)
+            assert version == "latest"
+    
+    def test_template_engine_get_variables(self, engine):
+        """Test get_variables() method (line 115)."""
+        variables = engine.get_variables()
+        assert isinstance(variables, list)
+        assert "project_name" in variables
+        assert "registry" in variables
+    
+    def test_template_engine_has_variable(self, engine):
+        """Test has_variable() method (line 124)."""
+        assert engine.has_variable("project_name") is True
+        assert engine.has_variable("nonexistent") is False
+    
+    def test_template_engine_resolve_with_exception(self, engine, tmp_path):
+        """Test resolve() handles exceptions (lines 145-146)."""
+        from sindri.core.context import ExecutionContext
+        
+        # Register a resolver that raises an exception
+        def failing_resolver(ctx):
+            raise RuntimeError("Resolver failed")
+        
+        engine.register("failing", failing_resolver)
+        ctx = ExecutionContext(cwd=tmp_path)
+        
+        # Should return None on exception, not raise
+        result = engine.resolve("failing", ctx)
+        assert result is None
 
 
 class TestTemplateEngineRegister:

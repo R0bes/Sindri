@@ -38,6 +38,13 @@ dev = [
     "pytest-cov>=4.0.0",
 ]
 
+# Documentation dependencies
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.0",
+]
+
 # Docker support (no extra Python deps, uses shell commands)
 docker = []
 
@@ -90,4 +97,7 @@ asyncio_mode = "auto"
 [tool.coverage.run]
 source = ["sindri"]
 omit = ["tests/*", "examples/*"]
+
+[tool.coverage.report]
+fail_under = 60.0
 
