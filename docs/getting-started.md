@@ -23,7 +23,7 @@ pip install sindri-dev[docker,compose,git,version,pypi]
 Für Entwicklung oder die neueste Version:
 
 ```bash
-git clone https://github.com/yourusername/sindri.git
+git clone https://github.com/R0bes/Sindri.git
 cd sindri
 pip install -e ".[dev]"
 ```
@@ -302,5 +302,5 @@ sindri c logs
 ## Hilfe erhalten
 
 - 📖 Dokumentation: Diese Docs
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/sindri/issues)
-- 💬 Diskussionen: [GitHub Discussions](https://github.com/yourusername/sindri/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/R0bes/Sindri/issues)
+- 💬 Diskussionen: [GitHub Discussions](https://github.com/R0bes/Sindri/discussions)

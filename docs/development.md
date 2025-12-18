@@ -7,7 +7,7 @@ Guide für Entwickler, die zu Sindri beitragen möchten.
 ### Repository klonen
 
 ```bash
-git clone https://github.com/yourusername/sindri.git
+git clone https://github.com/R0bes/Sindri.git
 cd sindri
 ```
 
@@ -127,7 +127,7 @@ Das Projekt verwendet GitHub Actions für CI/CD:
 - **Build**: Package-Build und Validierung
 - **Coverage**: Upload zu Codecov
 
-Siehe [.github/workflows/ci.yml](https://github.com/yourusername/sindri/blob/main/.github/workflows/ci.yml) für Details.
+Siehe [.github/workflows/ci.yml](https://github.com/R0bes/Sindri/blob/main/.github/workflows/ci.yml) für Details.
 
 ## Contributing
 

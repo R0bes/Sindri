@@ -1,8 +1,8 @@
 site_name: Sindri Documentation
 site_description: A project-configurable command palette for common dev workflows
-site_url: https://yourusername.github.io/sindri
-repo_url: https://github.com/yourusername/sindri
-repo_name: yourusername/sindri
+site_url: https://R0bes.github.io/Sindri
+repo_url: https://github.com/R0bes/Sindri
+repo_name: R0bes/Sindri
 
 theme:
   name: material
@@ -80,7 +80,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/yourusername/sindri
+      link: https://github.com/R0bes/Sindri
   version:
     provider: mike
 

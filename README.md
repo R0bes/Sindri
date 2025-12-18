@@ -36,7 +36,7 @@ pip install sindri-dev[docker,compose,git,version,pypi]
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/sindri.git
+git clone https://github.com/R0bes/Sindri.git
 cd sindri
 pip install -e .
 ```
@@ -366,7 +366,7 @@ sindri/
 ### Setup
 
 ```bash
-git clone https://github.com/yourusername/sindri.git
+git clone https://github.com/R0bes/Sindri.git
 cd sindri
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate

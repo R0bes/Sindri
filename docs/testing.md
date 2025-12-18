@@ -158,5 +158,5 @@ Tests werden automatisch in GitHub Actions ausgeführt:
 - Multi-Python: 3.11, 3.12, 3.13
 - Coverage-Upload zu Codecov
 
-Siehe [.github/workflows/ci.yml](https://github.com/yourusername/sindri/blob/main/.github/workflows/ci.yml) für Details.
+Siehe [.github/workflows/ci.yml](https://github.com/R0bes/Sindri/blob/main/.github/workflows/ci.yml) für Details.
 
