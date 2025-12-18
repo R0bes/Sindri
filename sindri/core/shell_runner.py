@@ -114,16 +114,10 @@ async def run_shell_command(
                     process.terminate()
                     await process.wait()
                 
-                # Close streams to avoid "Event loop is closed" warnings
-                if process.stdout:
-                    process.stdout.close()
-                if process.stderr:
-                    process.stderr.close()
-                
                 duration = (datetime.now() - start_time).total_seconds()
                 # Windows timeout returns exit code 1, Unix returns 124
                 timeout_exit_code = 1 if os.name == "nt" else 124
-                return CommandResult(
+                result = CommandResult(
                     command_id=command_id,
                     exit_code=timeout_exit_code,
                     stdout="\n".join(stdout_lines),
@@ -131,6 +125,18 @@ async def run_shell_command(
                     error=f"Command timed out after {timeout}s",
                     duration=duration,
                 )
+                
+                # Close streams to avoid "Event loop is closed" warnings
+                try:
+                    if process.stdout:
+                        process.stdout.close()
+                    if process.stderr:
+                        process.stderr.close()
+                except Exception:
+                    # Ignore errors during cleanup
+                    pass
+                
+                return result
         else:
             # Read both streams concurrently and wait for process
             await asyncio.gather(
@@ -139,12 +145,6 @@ async def run_shell_command(
                 process.wait(),
             )
             exit_code = process.returncode
-            
-            # Close streams to avoid "Event loop is closed" warnings
-            if process.stdout:
-                process.stdout.close()
-            if process.stderr:
-                process.stderr.close()
 
         duration = (datetime.now() - start_time).total_seconds()
         
