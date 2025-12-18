@@ -10,10 +10,6 @@ theme:
   favicon: assets/logo.png
   icon:
     logo: material/rocket-launch
-
-# Copy assets from root to site
-extra_files:
-  - assets/logo.png
   palette:
     - scheme: default
       primary: indigo

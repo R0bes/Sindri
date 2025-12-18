@@ -214,7 +214,21 @@ class GitMonitorRunCommand(CustomCommand):
                 env=ctx.get_env(),
             )
 
-            if not get_run_result.success or not get_run_result.stdout.strip():
+            if not get_run_result.success:
+                error_msg = get_run_result.stderr or get_run_result.error or "Unknown error"
+                if "not authenticated" in error_msg.lower() or "authentication" in error_msg.lower():
+                    return CommandResult(
+                        command_id=self.id,
+                        exit_code=1,
+                        error="GitHub CLI is not authenticated. Please run: gh auth login",
+                    )
+                return CommandResult(
+                    command_id=self.id,
+                    exit_code=1,
+                    error=f"Failed to get GitHub Actions runs: {error_msg}",
+                )
+
+            if not get_run_result.stdout.strip():
                 return CommandResult(
                     command_id=self.id,
                     exit_code=1,
