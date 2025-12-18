@@ -22,6 +22,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pages_enabled: ${{ steps.pages.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,7 +38,9 @@ jobs:
           pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin
 
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v4
+        continue-on-error: true
 
       - name: Build with MkDocs
         run: mkdocs build --strict
@@ -45,11 +49,20 @@ jobs:
           MKDOCS_BUILD_DIR: site
 
       - name: Upload artifact
+        if: steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./site
 
+      - name: Build completed (Pages not configured)
+        if: steps.pages.outcome != 'success'
+        run: |
+          echo "⚠️  GitHub Pages is not configured in this repository."
+          echo "Documentation was built successfully, but cannot be deployed."
+          echo "To enable deployment, go to: Settings > Pages > Source: GitHub Actions"
+
   deploy:
+    if: needs.build.outputs.pages_enabled == 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -264,10 +264,26 @@ class GitMonitorRunCommand(CustomCommand):
                         cwd=ctx.cwd,
                         env=ctx.get_env(),
                     )
+                    # Show the view output
+                    if view_result.stdout:
+                        ctx.stream_callback(view_result.stdout + "\n", "stdout")
+                    if view_result.stderr:
+                        ctx.stream_callback(view_result.stderr + "\n", "stderr")
+                    
+                    # Show conclusion
+                    if conclusion == "success":
+                        ctx.stream_callback("\n✅ Run completed successfully!\n", "stdout")
+                    elif conclusion == "failure":
+                        ctx.stream_callback("\n❌ Run failed. Check the details above.\n", "stderr")
+                    elif conclusion == "cancelled":
+                        ctx.stream_callback("\n⚠️  Run was cancelled.\n", "stderr")
+                    else:
+                        ctx.stream_callback(f"\n⚠️  Run completed with conclusion: {conclusion}\n", "stderr")
+                    
                     return CommandResult(
                         command_id=self.id,
                         exit_code=0 if conclusion == "success" else 1,
-                        stdout=view_result.stdout,
+                        stdout=view_result.stdout or f"Run {run_id} completed with conclusion: {conclusion}",
                         stderr=view_result.stderr,
                     )
 
@@ -397,17 +413,27 @@ class GitWorkflowCommand(CustomCommand):
         monitor_result = await monitor_cmd.execute(ctx)
         results.append(("monitor-run", monitor_result))
 
+        # Show monitor result if it failed
+        if not monitor_result.success:
+            if monitor_result.error:
+                ctx.stream_callback(f"\n⚠️  Monitoring failed: {monitor_result.error}\n", "stderr")
+            if monitor_result.stderr:
+                ctx.stream_callback(f"{monitor_result.stderr}\n", "stderr")
+            # Don't fail the whole workflow if monitoring fails
+            ctx.stream_callback("Monitoring step failed, but workflow completed (add, commit, push succeeded).\n", "stdout")
+
         # Combine all results
         combined_stdout = "\n".join([f"=== {step.upper()} ===" for step, _ in results])
         combined_stdout += "\n" + "\n".join([f"{step}: {r.stdout}" for step, r in results if r.stdout])
         combined_stderr = "\n".join([f"{step}: {r.stderr}" for step, r in results if r.stderr])
 
-        # Return success if all steps succeeded
-        all_success = all(r.success for _, r in results)
+        # Return success if core steps (add, commit, push) succeeded
+        # Monitoring failure is not critical
+        core_success = all(r.success for step, r in results if step != "monitor-run")
         return CommandResult(
             command_id=self.id,
-            exit_code=0 if all_success else 1,
+            exit_code=0 if core_success else 1,
             stdout=combined_stdout,
             stderr=combined_stderr if combined_stderr else None,
-            error=None if all_success else "One or more workflow steps failed",
+            error=None if core_success else "One or more core workflow steps failed",
         )
