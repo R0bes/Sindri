@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import logging
-from typing import TYPE_CHECKING, Callable, Iterator
+from typing import TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
     from sindri.config.models import SindriConfig
@@ -115,10 +115,20 @@ class CommandRegistry:
         from sindri.core.command import ShellCommand
 
         for config_cmd in config.commands:
-            # Skip if already registered (implemented commands take precedence)
+            # Commands from config override built-in commands
             primary_id = config_cmd.primary_id
+            # Remove existing command if it exists (config commands take precedence)
             if primary_id in self._commands:
-                continue
+                # Remove from commands dict
+                del self._commands[primary_id]
+                # Remove from aliases if it's an alias target
+                aliases_to_remove = [alias for alias, target in self._aliases.items() if target == primary_id]
+                for alias in aliases_to_remove:
+                    del self._aliases[alias]
+                # Remove from namespace map
+                for namespace, cmd_ids in self._namespace_map.items():
+                    if primary_id in cmd_ids:
+                        cmd_ids.remove(primary_id)
             
             cmd = ShellCommand.from_config(config_cmd)
             self.register(cmd)
@@ -164,14 +174,16 @@ class CommandRegistry:
         """
         Discover and load built-in command groups.
         
+        Loads groups from sindri.groups module.
+        
         Returns:
             List of loaded group IDs
         """
         loaded = []
         
-        # Import built-in groups
+        # Built-in groups: (group_id, new_module_path, class_name)
         builtin_groups = [
-            ("sindri", "sindri.groups.sindri", "SindriGroup"),
+            ("sindri", "sindri.groups.sindri_group", "SindriGroup"),
             ("general", "sindri.groups.general", "GeneralGroup"),
             ("quality", "sindri.groups.quality", "QualityGroup"),
             ("application", "sindri.groups.application", "ApplicationGroup"),
@@ -184,21 +196,14 @@ class CommandRegistry:
         
         for group_id, module_path, class_name in builtin_groups:
             try:
-                # Try new location first
+                # Load from sindri.groups.*
                 module = importlib.import_module(module_path)
                 group_class = getattr(module, class_name)
                 self.register_group(group_class())
                 loaded.append(group_id)
-            except (ImportError, AttributeError):
-                # Try old location as fallback
-                try:
-                    old_module_path = f"sindri.commands.{group_id}"
-                    module = importlib.import_module(old_module_path)
-                    group_class = getattr(module, class_name)
-                    self.register_group(group_class())
-                    loaded.append(group_id)
-                except (ImportError, AttributeError) as e:
-                    logger.debug(f"Could not load builtin group {group_id}: {e}")
+                logger.debug(f"Loaded builtin group from {module_path}: {group_id}")
+            except (ImportError, AttributeError) as e:
+                logger.warning(f"Could not load builtin group {group_id} from {module_path}: {e}")
         
         return loaded
 
@@ -226,6 +231,7 @@ class CommandRegistry:
         - ["docker", "build"] -> "docker-build"
         - ["docker-build"] -> "docker-build"
         - ["d", "build"] -> "docker-build" (with alias support)
+        - ["docker", "bp"] -> "docker-build_and_push" (action alias)
         - ["build"] -> "build" (direct lookup)
         
         Args:
@@ -244,12 +250,23 @@ class CommandRegistry:
             "g": "git",
             "v": "version",
             "q": "quality",
+            "app": "application",
             "a": "application",
+            "p": "pypi",
+        }
+        
+        # Action aliases (short -> full)
+        action_aliases = {
+            "bp": "build_and_push",
         }
         
         # Expand first part if it's a namespace alias
         if parts[0] in namespace_aliases:
             parts = [namespace_aliases[parts[0]]] + parts[1:]
+        
+        # Expand action alias if present
+        if len(parts) >= 2 and parts[1] in action_aliases:
+            parts = [parts[0], action_aliases[parts[1]]] + parts[2:]
         
         # Try as full ID first (already hyphenated)
         if len(parts) == 1:
@@ -261,12 +278,37 @@ class CommandRegistry:
         if cmd := self.get(full_id):
             return cmd
         
-        # Try namespace lookup
+        # Try namespace lookup with space (for commands like "version show")
         if len(parts) >= 2:
             namespace, action = parts[0], parts[1]
+            
+            # Try with hyphen
             candidate = f"{namespace}-{action}"
             if cmd := self.get(candidate):
                 return cmd
+            
+            # Try with space (for commands like "version show")
+            candidate_space = f"{namespace} {action}"
+            if cmd := self.get(candidate_space):
+                return cmd
+            
+            # Try finding command by group (namespace) and action
+            # (e.g., "quality test" -> find "test" in "quality" group)
+            if namespace in self._groups:
+                group_commands = self.get_by_group(namespace)
+                for cmd in group_commands:
+                    # Check if command ID matches action exactly
+                    if cmd.id == action:
+                        return cmd
+                    # Check if action matches command ID without namespace prefix
+                    if "-" in cmd.id:
+                        cmd_action = cmd.id.split("-", 1)[1]
+                        if cmd_action == action:
+                            return cmd
+                    if " " in cmd.id:
+                        cmd_action = cmd.id.split(" ", 1)[1]
+                        if cmd_action == action:
+                            return cmd
         
         return None
 

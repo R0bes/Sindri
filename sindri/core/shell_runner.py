@@ -8,7 +8,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
 
+import structlog
+
 from sindri.core.result import CommandResult
+
+logger = structlog.get_logger(__name__)
 
 
 async def run_shell_command(
@@ -42,6 +46,17 @@ async def run_shell_command(
     if env:
         full_env.update(env)
 
+    logger.debug(
+        "Executing shell command",
+        command_id=command_id,
+        shell=shell,
+        cwd=str(cwd),
+        has_env=env is not None,
+        env_keys=len(full_env),
+        virtual_env=full_env.get("VIRTUAL_ENV"),
+        path_first=full_env.get("PATH", "").split(os.pathsep)[0] if full_env.get("PATH") else None,
+    )
+
     try:
         # Create process
         process = await asyncio.create_subprocess_shell(
@@ -52,6 +67,8 @@ async def run_shell_command(
             stderr=asyncio.subprocess.PIPE,
             limit=1024 * 1024,  # 1MB buffer
         )
+        
+        logger.debug("Process created", command_id=command_id, pid=process.pid)
 
         async def read_stream(
             stream: asyncio.StreamReader,
@@ -95,12 +112,26 @@ async def run_shell_command(
             exit_code = await process.wait()
 
         duration = (datetime.now() - start_time).total_seconds()
+        
+        stdout_text = "\n".join(stdout_lines)
+        stderr_text = "\n".join(stderr_lines)
+        
+        logger.debug(
+            "Command completed",
+            command_id=command_id,
+            exit_code=exit_code,
+            duration=duration,
+            stdout_lines=len(stdout_lines),
+            stderr_lines=len(stderr_lines),
+            stdout_preview=stdout_text[:200] if stdout_text else None,
+            stderr_preview=stderr_text[:200] if stderr_text else None,
+        )
 
         return CommandResult(
             command_id=command_id,
             exit_code=exit_code,
-            stdout="\n".join(stdout_lines),
-            stderr="\n".join(stderr_lines),
+            stdout=stdout_text,
+            stderr=stderr_text,
             duration=duration,
         )
 

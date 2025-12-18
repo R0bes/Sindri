@@ -41,7 +41,7 @@ class QualityGroup(CommandGroup):
             ),
             ShellCommand(
                 id="test",
-                shell="pytest",
+                shell="python -m pytest tests/",
                 title="Test",
                 description="Run pytest test suite",
                 group_id=self.id,

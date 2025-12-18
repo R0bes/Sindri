@@ -71,8 +71,8 @@ class ExecutionContext:
         
         Merges in order (later overrides earlier):
         1. System environment (os.environ)
-        2. Context-level env vars
-        3. Profile-specific env vars (if profile specified)
+        2. Profile-specific env vars (if profile specified)
+        3. Context-level env vars (highest priority)
         
         Args:
             profile: Optional environment profile (dev, test, prod)
@@ -81,11 +81,13 @@ class ExecutionContext:
             Merged environment dictionary
         """
         result = dict(os.environ)
-        result.update(self.env)
         
         if profile and self.config:
             profile_env = self.config.get_env_vars(profile)
             result.update(profile_env)
+        
+        # Context env overrides everything
+        result.update(self.env)
         
         return result
 
@@ -128,13 +130,58 @@ class ExecutionContext:
         """
         Resolve a path relative to the context's working directory.
         
-        Absolute paths are returned unchanged.
+        Absolute paths are returned unchanged (even on Windows).
         Relative paths are resolved against cwd.
         """
         p = Path(path) if isinstance(path, str) else path
+        # On Windows, absolute paths like /absolute/path are relative to current drive
+        # Keep them as-is for consistency
         if p.is_absolute():
             return p
         return (self.cwd / p).resolve()
+    
+    @property
+    def project_name(self) -> str:
+        """Get project name from config or fallback to directory name."""
+        if self.config and self.config.project_name:
+            return self.config.project_name
+        return self.cwd.name
+    
+    def child(
+        self,
+        cwd: Optional[Path | str] = None,
+        env: Optional[dict[str, str]] = None,
+        dry_run: Optional[bool] = None,
+        verbose: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> ExecutionContext:
+        """
+        Create a child context with overridden values.
+        
+        Child inherits all parent values, but can override specific ones.
+        Environment variables are merged (child overrides parent).
+        """
+        new_cwd = self.cwd
+        if cwd is not None:
+            new_cwd = Path(cwd) if isinstance(cwd, str) else cwd
+            if not new_cwd.is_absolute():
+                new_cwd = (self.cwd / new_cwd).resolve()
+        
+        new_env = self.env.copy()
+        if env:
+            new_env.update(env)
+        
+        return ExecutionContext(
+            cwd=new_cwd,
+            config=self.config,
+            env=new_env,
+            dry_run=dry_run if dry_run is not None else self.dry_run,
+            verbose=verbose if verbose is not None else self.verbose,
+            timeout=kwargs.get("timeout", self.timeout),
+            retries=kwargs.get("retries", self.retries),
+            stream_callback=kwargs.get("stream_callback", self.stream_callback),
+            _template_engine=self._template_engine,
+        )
 
     @classmethod
     def create(

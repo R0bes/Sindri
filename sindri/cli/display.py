@@ -90,6 +90,14 @@ def create_command_table(
             group_id = group.id if group else "other"
             group_desc = group.description if group and group.description else ""
             
+            # Remove parentheses with command names from description (e.g., "Code quality commands (test, lint, validate)" -> "Code quality commands")
+            if group_desc and "(" in group_desc and ")" in group_desc:
+                # Find the last opening parenthesis and remove everything from there
+                last_open = group_desc.rfind("(")
+                if last_open > 0:
+                    # Keep text before the opening parenthesis, strip trailing whitespace
+                    group_desc = group_desc[:last_open].rstrip()
+            
             # Get color for this group
             current_group_color = GROUP_COLORS.get(group_id, DEFAULT_GROUP_COLOR)
             
@@ -110,7 +118,9 @@ def create_command_table(
             grouped_commands = defaultdict(list)
             for cmd in commands:
                 # Use shell command as key for grouping
-                key = (cmd.shell, cmd.title or cmd.primary_id)
+                # Get primary_id if available (for config commands), otherwise use id
+                cmd_id = getattr(cmd, 'primary_id', cmd.id)
+                key = (cmd.shell, cmd.title or cmd_id)
                 grouped_commands[key].append(cmd)
             
             # Add commands in this group (grouped by aliases)
@@ -121,22 +131,29 @@ def create_command_table(
                 display_ids = []
                 first = True
                 for cmd in cmd_group:
-                    display_id = format_command_id_for_display(cmd.primary_id)
+                    # Get primary_id if available (for config commands), otherwise use id
+                    cmd_id = getattr(cmd, 'primary_id', cmd.id)
+                    display_id = format_command_id_for_display(cmd_id)
                     # For subcommands, only show namespace on first
                     if first:
                         display_ids.append(display_id)
                         first = False
                     else:
                         # Extract action part only
-                        if "-" in cmd.primary_id:
-                            action = cmd.primary_id.split("-", 1)[1]
+                        if "-" in cmd_id or " " in cmd_id:
+                            # Handle both hyphen and space separators
+                            if "-" in cmd_id:
+                                action = cmd_id.split("-", 1)[1]
+                            else:
+                                action = cmd_id.split(" ", 1)[1]
                             display_ids.append(action)
                         else:
-                            display_ids.append(cmd.primary_id)
+                            display_ids.append(cmd_id)
                 # Join with comma
                 command_display = ", ".join(display_ids)
                 
-                cmd_title = cmd_group[0].title or cmd_group[0].primary_id
+                cmd_id_for_title = getattr(cmd_group[0], 'primary_id', cmd_group[0].id)
+                cmd_title = cmd_group[0].title or cmd_id_for_title
                 
                 # Use Rich Text for command IDs with group color
                 cmd_id_text = Text(command_display, style=current_group_color)

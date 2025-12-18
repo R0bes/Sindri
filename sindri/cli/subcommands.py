@@ -10,7 +10,7 @@ from rich.table import Table
 
 from sindri.cli.commands import run as run_command
 from sindri.cli.display import console
-from sindri.cli.parsing import format_command_id_for_display
+from sindri.cli.parsing import format_command_id_for_display, NAMESPACE_ALIASES
 from sindri.config import load_config
 
 
@@ -128,8 +128,16 @@ def create_namespace_subcommand(namespace: str) -> typer.Typer:
                 namespace_idx = -1
                 action_idx = -1
                 remaining_args = []
+                # Build reverse alias map (full -> aliases)
+                reverse_aliases = {}
+                for alias, full_ns in NAMESPACE_ALIASES.items():
+                    if full_ns not in reverse_aliases:
+                        reverse_aliases[full_ns] = []
+                    reverse_aliases[full_ns].append(alias)
+                
                 for i, arg in enumerate(args):
-                    aliases = namespace_aliases_map.get(namespace, [])
+                    # Check if arg matches namespace or any of its aliases
+                    aliases = reverse_aliases.get(namespace, [])
                     if arg == namespace or arg in aliases:
                         namespace_idx = i
                     elif namespace_idx >= 0 and arg == action:
@@ -169,7 +177,9 @@ def register_namespace_subcommands(
         "git": ["g"],
         "sindri": [],
         "version": ["v"],
-        "pypi": [],
+        "quality": ["q"],
+        "application": ["app", "a"],
+        "pypi": ["p"],
     }
 
     # Always register version namespace (it's built-in)

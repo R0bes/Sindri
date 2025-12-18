@@ -41,10 +41,15 @@ class TemplateEngine:
         def resolve_cwd(ctx: ExecutionContext) -> str:
             return str(ctx.cwd)
 
+        def resolve_workspace(ctx: ExecutionContext) -> str:
+            """Workspace is same as cwd for now."""
+            return str(ctx.cwd)
+
         self.register("project_name", resolve_project_name)
         self.register("registry", resolve_registry)
         self.register("version", resolve_version)
         self.register("cwd", resolve_cwd)
+        self.register("workspace", resolve_workspace)
 
     def register(
         self,
@@ -108,10 +113,78 @@ class TemplateEngine:
     def get_variables(self) -> list[str]:
         """Get list of registered variable names."""
         return list(self._resolvers.keys())
+    
+    @property
+    def variables(self) -> list[str]:
+        """Get list of registered variable names (property)."""
+        return list(self._resolvers.keys())
 
     def has_variable(self, name: str) -> bool:
         """Check if a variable is registered."""
         return name in self._resolvers
+    
+    def has(self, name: str) -> bool:
+        """Check if a variable is registered (alias)."""
+        return name in self._resolvers
+    
+    def resolve(self, name: str, ctx: ExecutionContext) -> str | None:
+        """
+        Resolve a single variable.
+        
+        Args:
+            name: Variable name
+            ctx: Execution context
+            
+        Returns:
+            Resolved value or None if variable not found
+        """
+        if name not in self._resolvers:
+            return None
+        try:
+            return self._resolvers[name](ctx)
+        except Exception:
+            return None
+    
+    def expand_strict(self, text: str, ctx: ExecutionContext) -> str:
+        """
+        Expand template variables, raising error on unknown variables.
+        
+        Args:
+            text: Text containing template variables
+            ctx: Execution context for variable resolution
+            
+        Returns:
+            Text with variables expanded
+            
+        Raises:
+            ValueError: If any unknown variables are found
+        """
+        variables = self.find_variables(text)
+        unknown = [v for v in variables if not self.has(v)]
+        if unknown:
+            raise ValueError(f"Unknown template variables: {', '.join(unknown)}")
+        return self.expand(text, ctx)
+    
+    def find_variables(self, text: str) -> list[str]:
+        """
+        Find all template variables in text.
+        
+        Args:
+            text: Text to search
+            
+        Returns:
+            List of variable names (without duplicates)
+        """
+        # Match both {var} and ${var} patterns
+        pattern = r'\$\{(\w+)\}|\{(\w+)\}'
+        matches = re.findall(pattern, text)
+        variables = []
+        for match in matches:
+            # match is tuple: (${var}, {var}) - one will be empty
+            var = match[0] or match[1]
+            if var and var not in variables:
+                variables.append(var)
+        return variables
 
 
 def _get_project_version(cwd: Path) -> str:
@@ -156,3 +229,17 @@ def get_template_engine() -> TemplateEngine:
     if _default_engine is None:
         _default_engine = TemplateEngine()
     return _default_engine
+
+
+def expand_templates(text: str, ctx: ExecutionContext) -> str:
+    """
+    Expand template variables using the default engine.
+    
+    Args:
+        text: Text containing template variables
+        ctx: Execution context for variable resolution
+        
+    Returns:
+        Text with variables expanded
+    """
+    return get_template_engine().expand(text, ctx)

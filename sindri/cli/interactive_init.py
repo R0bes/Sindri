@@ -20,7 +20,7 @@ AVAILABLE_GROUPS = {
     },
     "quality": {
         "title": "Quality",
-        "description": "Code quality commands (test, lint, validate)",
+        "description": "Code quality commands",
         "commands": ["test", "cov", "lint", "validate"],
     },
     "application": {

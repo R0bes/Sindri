@@ -19,14 +19,14 @@ class ApplicationGroup(CommandGroup):
     def _create_commands(self) -> list:
         return [
             ShellCommand(
-                id="run",
+                id="app-run",
                 shell="python -m ${project_name}",
                 title="Run",
                 description="Run the application",
                 group_id=self.id,
             ),
             ShellCommand(
-                id="dev",
+                id="app-dev",
                 shell="python -m ${project_name}",
                 title="Dev",
                 description="Run in development mode",

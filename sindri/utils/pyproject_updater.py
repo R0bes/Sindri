@@ -198,7 +198,7 @@ def _update_pyproject_content(content: str, data: dict) -> str:
     if not has_sindri_script and "[project.scripts]" not in content_lower:
         if scripts_idx >= 0:
             # Scripts section exists, append sindri
-            result.insert(scripts_idx + 1, 'sindri = "sindri.cli.main:main"')
+            result.insert(scripts_idx + 1, 'sindri = "sindri.cli:app"')
         elif project_idx >= 0:
             # No scripts section, add it after project section
             insert_pos = project_idx + 1
@@ -209,7 +209,7 @@ def _update_pyproject_content(content: str, data: dict) -> str:
                     break
             result.insert(insert_pos, "")
             result.insert(insert_pos + 1, "[project.scripts]")
-            result.insert(insert_pos + 2, 'sindri = "sindri.cli.main:main"')
+            result.insert(insert_pos + 2, 'sindri = "sindri.cli:app"')
     
     return "\n".join(result)
 

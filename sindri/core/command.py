@@ -150,36 +150,49 @@ class ShellCommand:
         
         Uses the execution engine from the context.
         """
+        import structlog
         from sindri.core.result import CommandResult
+        
+        logger = structlog.get_logger(__name__)
+        
+        logger.debug("Executing ShellCommand", command_id=self.id, ctx_cwd=str(ctx.cwd))
         
         # Get shell command (not expanded yet)
         shell = self.get_shell(ctx)
+        logger.debug("Got shell command", command_id=self.id, shell=shell)
         
         # Expand templates
         expanded_shell = ctx.expand_templates(shell)
+        logger.debug("Expanded shell command", command_id=self.id, expanded_shell=expanded_shell)
         
         # Resolve working directory
         cwd = ctx.cwd
         if self.cwd:
             cwd = ctx.resolve_path(self.cwd)
             if not cwd.exists():
+                logger.warning("Working directory does not exist", command_id=self.id, cwd=str(cwd))
                 return CommandResult.failure(
                     self.id,
                     f"Working directory does not exist: {cwd}",
                 )
         
+        logger.debug("Resolved working directory", command_id=self.id, cwd=str(cwd), cwd_exists=cwd.exists())
+        
         # Merge environment variables
         env = ctx.get_env(self.env_profile)
         env.update(self.env)
+        logger.debug("Merged environment", command_id=self.id, env_keys=len(env), has_virtual_env="VIRTUAL_ENV" in env)
         
         # Check for dry run
         if ctx.dry_run:
+            logger.debug("Dry run mode", command_id=self.id)
             return CommandResult.dry_run(self.id, expanded_shell)
         
         # Execute via shell runner
         from sindri.core.shell_runner import run_shell_command
         
-        return await run_shell_command(
+        logger.debug("Calling run_shell_command", command_id=self.id, cwd=str(cwd))
+        result = await run_shell_command(
             command_id=self.id,
             shell=expanded_shell,
             cwd=cwd,
@@ -187,6 +200,8 @@ class ShellCommand:
             timeout=self.timeout or ctx.timeout,
             stream_callback=ctx.stream_callback,
         )
+        logger.debug("Command execution completed", command_id=self.id, exit_code=result.exit_code, success=result.success)
+        return result
 
     def validate(self, ctx: ExecutionContext) -> str | None:
         """Validate command can run."""

@@ -24,7 +24,7 @@ from sindri.utils.validate_dependencies import validate_pyproject_dependencies
 from sindri.utils.venv_helper import (
     get_install_command,
     get_setup_command,
-    get_sindri_venv_path,
+    get_venv_path,
     get_venv_pip,
     get_venv_python,
 )
@@ -42,7 +42,7 @@ __all__ = [
     "get_restart_command",
     "get_setup_command",
     "get_shell",
-    "get_sindri_venv_path",
+    "get_venv_path",
     "get_start_command",
     "get_stop_command",
     "get_validate_command",

@@ -21,15 +21,14 @@ def main():
         errors.append(f"Import error: {e}")
         print(f"  ✗ Import failed: {e}")
     
-    # Test 2: Backward compatibility - runner imports
-    print("\n[2/5] Testing backward compatibility (runner imports)...")
+    # Test 2: Core imports
+    print("\n[2/5] Testing core imports...")
     try:
-        from sindri.runner import CommandResult as RunnerResult
-        from sindri.runner.result import CommandResult as ResultResult
-        assert RunnerResult is ResultResult
-        print("  ✓ Backward compatible imports work")
+        from sindri.core.result import CommandResult
+        from sindri.core.shell_runner import run_shell_command
+        print("  ✓ Core imports work")
     except Exception as e:
-        errors.append(f"Backward compat error: {e}")
+        errors.append(f"Core import error: {e}")
         print(f"  ✗ Failed: {e}")
     
     # Test 3: CommandResult functionality

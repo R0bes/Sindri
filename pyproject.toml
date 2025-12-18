@@ -67,13 +67,13 @@ docker-all = [
 ]
 
 [project.scripts]
-sindri = "sindri.cli.main:main"
+sindri = "sindri.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/sindri"
-Documentation = "https://github.com/yourusername/sindri#readme"
-Repository = "https://github.com/yourusername/sindri"
-Issues = "https://github.com/yourusername/sindri/issues"
+Homepage = "https://github.com/R0bes/sindri"
+Documentation = "https://github.com/R0bes/sindri#readme"
+Repository = "https://github.com/R0bes/sindri"
+Issues = "https://github.com/R0bes/sindri/issues"
 
 # Note: Update the URLs above with your actual GitHub repository URL
 

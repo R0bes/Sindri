@@ -144,7 +144,7 @@ class TestCommandResult:
         )
         with pytest.raises(RuntimeError) as exc_info:
             result.raise_on_error()
-        assert "stderr" in str(exc_info.value)
+        assert "Error from stderr" in str(exc_info.value)
     
     def test_raise_on_error_uses_exit_code_if_no_message(self):
         """raise_on_error should mention exit code if no error or stderr."""
@@ -155,17 +155,3 @@ class TestCommandResult:
         with pytest.raises(RuntimeError) as exc_info:
             result.raise_on_error()
         assert "127" in str(exc_info.value)
-
-
-class TestCommandResultBackwardCompatibility:
-    """Tests ensuring backward compatibility with old result.py usage."""
-    
-    def test_import_from_runner(self):
-        """Should be importable from runner.result (old location)."""
-        from sindri.runner.result import CommandResult as RunnerResult
-        assert RunnerResult is CommandResult
-    
-    def test_import_from_runner_init(self):
-        """Should be importable from runner package."""
-        from sindri.runner import CommandResult as RunnerResult
-        assert RunnerResult is CommandResult

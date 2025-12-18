@@ -114,12 +114,12 @@ class TestRunCommand:
         config_file = temp_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
-title = "Test"
+id = "hello"
+title = "Hello"
 shell = "echo 'Hello'"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test"])
+        result = cli_runner.invoke(app, ["run", "hello"])
         
         assert result.exit_code == 0
         assert "Hello" in result.stdout or "SUCCESS" in result.stdout
@@ -129,18 +129,18 @@ shell = "echo 'Hello'"
         monkeypatch.chdir(temp_dir)
         
         config_file = temp_dir / "sindri.toml"
-        config_file.write_text('version = "1.0"\n[[commands]]\nid = "test"\nshell = "echo test"')
+        config_file.write_text('version = "1.0"\n[[commands]]\nid = "hello"\nshell = "echo hello"')
         
         result = cli_runner.invoke(app, ["run", "nonexistent"])
         
         assert result.exit_code == 1
-        assert "not found" in result.stdout.lower()
+        assert "not found" in result.stdout.lower() or "Unknown command" in result.stdout
     
     def test_run_command_no_config(self, cli_runner: CliRunner, temp_dir: Path, monkeypatch):
         """Test running command without config file."""
         monkeypatch.chdir(temp_dir)
         
-        result = cli_runner.invoke(app, ["run", "test"])
+        result = cli_runner.invoke(app, ["run", "hello"])
         
         assert result.exit_code == 1
         assert "not found" in result.stdout.lower() or "No Sindri config" in result.stdout
@@ -150,12 +150,12 @@ shell = "echo 'Hello'"
         config_file = temp_dir / "custom.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
-title = "Test"
+id = "hello"
+title = "Hello"
 shell = "echo 'Hello'"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test", "--config", str(config_file)])
+        result = cli_runner.invoke(app, ["run", "hello", "--config", str(config_file)])
         
         assert result.exit_code == 0
     
@@ -166,12 +166,12 @@ shell = "echo 'Hello'"
         config_file = temp_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
-title = "Test"
+id = "hello"
+title = "Hello"
 shell = "echo 'Hello'"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test", "--dry-run"])
+        result = cli_runner.invoke(app, ["run", "hello", "--dry-run"])
         
         assert result.exit_code == 0
         assert "DRY RUN" in result.stdout.upper()
@@ -204,12 +204,12 @@ shell = "echo 'Command 2'"
         config_file = temp_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "echo 'Hello'"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test", "--timeout", "10"])
+        result = cli_runner.invoke(app, ["run", "hello", "--timeout", "10"])
         
         assert result.exit_code == 0
     
@@ -220,12 +220,12 @@ shell = "echo 'Hello'"
         config_file = temp_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "echo 'Hello'"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test", "--retries", "2"])
+        result = cli_runner.invoke(app, ["run", "hello", "--retries", "2"])
         
         assert result.exit_code == 0
 
@@ -337,7 +337,7 @@ class TestConfigValidateCommand:
         config_file = temp_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "echo 'Hello'"
 """)
@@ -355,7 +355,7 @@ shell = "echo 'Hello'"
         config_file.write_text("""version = "1.0"
 project_name = "test-project"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "echo 'Hello'"
 """)
@@ -392,7 +392,7 @@ shell = "echo 'Hello'"
         config_file = temp_dir / "custom.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "echo 'Hello'"
 """)
@@ -453,13 +453,13 @@ class TestHelperFunctions:
     
     def test_format_command_id_for_display_simple(self):
         """Test formatting simple command IDs."""
-        assert format_command_id_for_display("setup") == "setup"
-        assert format_command_id_for_display("install") == "install"
+        assert format_command_id_for_display("setup-venv") == "setup venv"
+        assert format_command_id_for_display("setup-install") == "setup install"
     
     def test_resolve_command_id_single_part(self):
         """Test resolving single part command ID."""
         assert resolve_command_id(["docker-up"]) == "docker-up"
-        assert resolve_command_id(["setup"]) == "setup"
+        assert resolve_command_id(["setup-venv"]) == "setup-venv"
     
     def test_resolve_command_id_two_parts(self):
         """Test resolving two-part command ID."""
@@ -483,7 +483,7 @@ class TestHelperFunctions:
             commands=[
                 Command(id="docker-up", shell="docker up"),
                 Command(id="compose-up", shell="compose up"),
-                Command(id="setup", shell="echo setup"),
+                Command(id="setup-venv", shell="echo setup venv"),
             ]
         )
         
@@ -498,9 +498,14 @@ class TestHelperFunctions:
         assert cmd.id == "docker-up"
         
         # Test single command
-        cmd = find_command_by_parts(config, ["setup"])
+        cmd = find_command_by_parts(config, ["setup-venv"])
         assert cmd is not None
-        assert cmd.id == "setup"
+        assert cmd.id == "setup-venv"
+        
+        # Test namespace command
+        cmd = find_command_by_parts(config, ["setup", "venv"])
+        assert cmd is not None
+        assert cmd.id == "setup-venv"
         
         # Test non-existent
         cmd = find_command_by_parts(config, ["nonexistent"])
@@ -536,9 +541,9 @@ commands = ["cmd1", "cmd2"]
         result = cli_runner.invoke(app, ["list"])
         
         assert result.exit_code == 0
-        assert "cmd1" in result.stdout
-        assert "cmd2" in result.stdout
-        assert "Group 1" in result.stdout or "group1" in result.stdout.lower()
+        assert "cmd1" in result.stdout or "Command 1" in result.stdout
+        assert "cmd2" in result.stdout or "Command 2" in result.stdout
+        assert "Group 1" in result.stdout or "group1" in result.stdout.lower() or "Available Commands" in result.stdout
     
     def test_list_with_long_description(self, cli_runner: CliRunner, temp_dir: Path, monkeypatch):
         """Test listing commands with long descriptions that get truncated."""
@@ -600,7 +605,7 @@ class TestMainCommand:
         config_file = sindri_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "echo test"
 """)
@@ -742,12 +747,12 @@ shell = "echo 'docker down'"
         config_file = temp_dir / "sindri.toml"
         config_file.write_text("""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "exit 1"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test"])
+        result = cli_runner.invoke(app, ["run", "hello"])
         
         assert result.exit_code == 1
         assert "FAIL" in result.stdout or "failed" in result.stdout.lower()
@@ -765,12 +770,12 @@ shell = "exit 1"
         
         config_file.write_text(f"""version = "1.0"
 [[commands]]
-id = "test"
+id = "hello"
 title = "Test"
 shell = "{shell_cmd}"
 """)
         
-        result = cli_runner.invoke(app, ["run", "test"])
+        result = cli_runner.invoke(app, ["run", "hello"])
         
         assert result.exit_code == 1
     

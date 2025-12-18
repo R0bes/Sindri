@@ -5,22 +5,22 @@ from pathlib import Path
 from typing import Optional
 
 
-def get_sindri_venv_path(cwd: Path) -> Path:
+def get_venv_path(cwd: Path) -> Path:
     """
-    Get the path to the Sindri virtual environment.
+    Get the path to the project virtual environment.
     
     Args:
         cwd: Current working directory
         
     Returns:
-        Path to .sindri/venv
+        Path to .venv
     """
-    return cwd / ".sindri" / "venv"
+    return cwd / ".venv"
 
 
 def get_venv_python(cwd: Path) -> Optional[str]:
     """
-    Get the Python executable path in the Sindri venv.
+    Get the Python executable path in the project venv.
     
     Args:
         cwd: Current working directory
@@ -28,7 +28,7 @@ def get_venv_python(cwd: Path) -> Optional[str]:
     Returns:
         Path to Python executable or None if venv doesn't exist
     """
-    venv_path = get_sindri_venv_path(cwd)
+    venv_path = get_venv_path(cwd)
     
     if os.name == "nt":  # Windows
         python_path = venv_path / "Scripts" / "python.exe"
@@ -42,7 +42,7 @@ def get_venv_python(cwd: Path) -> Optional[str]:
 
 def get_venv_pip(cwd: Path) -> Optional[str]:
     """
-    Get the pip executable path in the Sindri venv.
+    Get the pip executable path in the project venv.
     
     Args:
         cwd: Current working directory
@@ -50,7 +50,7 @@ def get_venv_pip(cwd: Path) -> Optional[str]:
     Returns:
         Path to pip executable or None if venv doesn't exist
     """
-    venv_path = get_sindri_venv_path(cwd)
+    venv_path = get_venv_path(cwd)
     
     if os.name == "nt":  # Windows
         pip_path = venv_path / "Scripts" / "pip.exe"
@@ -75,20 +75,18 @@ def get_setup_command(cwd: Path) -> str:
     import os
     
     # Use Python's venv module which is platform-independent
-    # The venv will be created in .sindri/venv
+    # The venv will be created in .venv
     # Use python -m pip for better compatibility across platforms
     if os.name == "nt":  # Windows
         return (
-            "if not exist .sindri mkdir .sindri && "
-            "python -m venv .sindri\\venv && "
-            "(.sindri\\venv\\Scripts\\python.exe -m pip install -e . 2>nul || "
+            "python -m venv .venv && "
+            "(.venv\\Scripts\\python.exe -m pip install -e . 2>nul || "
             "python -m pip install -e .)"
         )
     else:  # Unix
         return (
-            "mkdir -p .sindri && "
-            "python -m venv .sindri/venv && "
-            "(.sindri/venv/bin/python -m pip install -e . 2>/dev/null || "
+            "python -m venv .venv && "
+            "(.venv/bin/python -m pip install -e . 2>/dev/null || "
             "python -m pip install -e .)"
         )
 

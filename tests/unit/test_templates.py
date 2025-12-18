@@ -8,7 +8,7 @@ from sindri.core.context import ExecutionContext
 from sindri.core.templates import (
     TemplateEngine,
     expand_templates,
-    get_default_engine,
+    get_template_engine,
 )
 
 
@@ -255,15 +255,15 @@ class TestTemplateEngineFindVariables:
 class TestGlobalFunctions:
     """Tests for module-level functions."""
     
-    def test_get_default_engine_returns_engine(self):
-        """get_default_engine should return a TemplateEngine."""
-        engine = get_default_engine()
+    def test_get_template_engine_returns_engine(self):
+        """get_template_engine should return a TemplateEngine."""
+        engine = get_template_engine()
         assert isinstance(engine, TemplateEngine)
     
-    def test_get_default_engine_returns_same_instance(self):
-        """get_default_engine should return same instance."""
-        engine1 = get_default_engine()
-        engine2 = get_default_engine()
+    def test_get_template_engine_returns_same_instance(self):
+        """get_template_engine should return same instance."""
+        engine1 = get_template_engine()
+        engine2 = get_template_engine()
         assert engine1 is engine2
     
     def test_expand_templates_function(self, tmp_path):

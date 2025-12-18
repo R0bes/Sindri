@@ -38,6 +38,9 @@ ENV/
 .coverage
 htmlcov/
 .tox/
+.mypy_cache/
+.ruff_cache/
+.sindri/
 
 # Logs
 *.log
