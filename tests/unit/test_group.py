@@ -1,6 +1,5 @@
 """Tests for sindri.core.group module."""
 
-import pytest
 
 from sindri.core.command import ShellCommand
 from sindri.core.group import CommandGroup

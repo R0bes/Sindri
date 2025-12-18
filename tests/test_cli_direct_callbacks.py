@@ -1,15 +1,13 @@
 """Direct callback tests to reach 95% coverage."""
 
 from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
-import sys
+from unittest.mock import patch, Mock
 
 import pytest
 import typer
 from typer.testing import CliRunner
 
 from sindri.cli.subcommands import create_namespace_subcommand
-from sindri.config import SindriConfig, Command, Group
 
 
 @pytest.fixture
@@ -37,7 +35,6 @@ description = "Build Docker image"
 """)
         
         # Use CliRunner to invoke the subcommand, which will trigger the callback
-        from typer.testing import CliRunner
         namespace_app = create_namespace_subcommand("docker")
         runner = CliRunner()
         

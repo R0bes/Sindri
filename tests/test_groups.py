@@ -47,7 +47,6 @@ from sindri.groups.version import (
     VersionShowCommand,
     VersionTagCommand,
 )
-from tests.conftest import sample_config
 
 
 @pytest.fixture

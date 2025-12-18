@@ -1,8 +1,7 @@
 """Final tests for CLI modules to reach 90% coverage."""
 
 from pathlib import Path
-from unittest.mock import patch, Mock
-import sys
+from unittest.mock import patch
 
 import pytest
 import typer

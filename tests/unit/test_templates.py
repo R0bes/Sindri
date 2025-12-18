@@ -173,7 +173,7 @@ class TestTemplateEngineExpand:
     def test_get_project_version_tomli_import_error(self, tmp_path):
         """Test _get_project_version handles tomli import error (lines 198-202)."""
         from sindri.core.templates import _get_project_version
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
         
         # Create pyproject.toml with version
         pyproject = tmp_path / "pyproject.toml"

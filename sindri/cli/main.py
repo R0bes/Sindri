@@ -11,7 +11,6 @@ from sindri.cli.commands import run as run_command
 from sindri.cli.display import console
 from sindri.cli.parsing import (
     NAMESPACE_ALIASES,
-    find_command_by_parts,
     format_command_id_for_display,
 )
 from sindri.config import load_config

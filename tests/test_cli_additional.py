@@ -1,8 +1,7 @@
 """Additional tests for CLI modules to increase coverage."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch, Mock
-import sys
+from unittest.mock import patch, Mock
 
 import pytest
 import typer
@@ -341,7 +340,6 @@ class TestInteractiveInitModule:
     
     def test_interactive_init_pyproject_toml(self, temp_dir: Path, monkeypatch):
         """Test interactive_init adding to pyproject.toml."""
-        from sindri.cli.interactive_init import interactive_init
         
         pyproject_path = temp_dir / "pyproject.toml"
         pyproject_path.write_text("[project]\nname = 'test'")
@@ -544,10 +542,10 @@ shell = "docker build ."
         from typer.testing import CliRunner
         runner = CliRunner()
         
-        with patch('sindri.cli.subcommands.run_command') as mock_run:
+        with patch('sindri.cli.subcommands.run_command'):
             with patch('sys.argv', ['sindri', 'docker', 'build']):
                 try:
-                    result = runner.invoke(namespace_app, ['build'])
+                    runner.invoke(namespace_app, ['build'])
                 except Exception:
                     pass
                 # Should have attempted to run command
@@ -842,8 +840,6 @@ groups = ["quality"]
 """)
         
         # Test that pytest args are filtered
-        from sindri.cli.__init__ import main as main_callback
-        from typer.testing import CliRunner
         from typer import Context
         
         # Create a mock context
@@ -1283,7 +1279,6 @@ groups = ["quality", "docker"]
         """Test _print_registry_commands with aliases."""
         from sindri.cli.commands import _print_registry_commands
         from sindri.core import get_registry, reset_registry
-        from sindri.core.command import ShellCommand
         
         monkeypatch.chdir(temp_dir)
         

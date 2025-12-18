@@ -1,11 +1,9 @@
 """Targeted tests to reach 95% coverage for CLI modules."""
 
 from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
-import sys
+from unittest.mock import patch
 
 import pytest
-import typer
 from typer.testing import CliRunner
 
 from sindri.cli import app
@@ -229,7 +227,7 @@ shell = "docker build ."
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
@@ -253,7 +251,7 @@ shell = "docker up"
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
@@ -272,7 +270,7 @@ groups = ["docker"]
 """)
         
         with patch('sys.argv', ['sindri', 'docker']):
-            with patch('sindri.cli.main.console.print') as mock_print:
+            with patch('sindri.cli.main.console.print'):
                 with patch('sindri.cli.main.sys.exit'):
                     try:
                         main()
