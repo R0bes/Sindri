@@ -1,11 +1,7 @@
 """Tests for logging setup."""
 
-import json
-import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 import structlog
 from structlog._config import BoundLoggerLazyProxy
 
@@ -39,8 +35,6 @@ class TestSetupLogging:
         logger = setup_logging(project_path=tmp_path)
         
         assert logger is not None
-        # Check that log directory was created
-        log_dir = tmp_path.parent / ".sindri" / "logs"
         # Note: log directory is created in home directory, not project path
         # This is expected behavior based on the implementation
     

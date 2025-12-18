@@ -1,6 +1,5 @@
 """CLI interface for Sindri."""
 
-from pathlib import Path
 from typing import List, Optional
 
 import typer
@@ -8,19 +7,17 @@ import typer
 from sindri.cli.app import app
 from sindri.cli.commands import (
     config_app,
-    config_init,
-    config_validate,
     init,
     list_commands,
     main as main_command,
     run as run_command,
 )
+from sindri.cli.subcommands import register_namespace_subcommands
 
 # Register commands
 app.add_typer(config_app)
 
 # Register namespace subcommands (only configured ones)
-from sindri.cli.subcommands import register_namespace_subcommands
 register_namespace_subcommands(app)
 
 

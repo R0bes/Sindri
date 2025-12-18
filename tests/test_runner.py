@@ -1,12 +1,9 @@
 """Tests for the async shell runner."""
 
-import asyncio
 import os
 from pathlib import Path
 
 import pytest
-
-from sindri.config import Command
 from sindri.core.shell_runner import run_shell_command, run_shell_commands_parallel
 from sindri.core.result import CommandResult
 

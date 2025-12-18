@@ -1,7 +1,6 @@
 """Helper functions to normalize project names for PEP 508 compliance."""
 
 import re
-from typing import Optional
 
 
 def normalize_project_name(name: str) -> str:

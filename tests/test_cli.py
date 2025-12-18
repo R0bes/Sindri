@@ -1,8 +1,7 @@
 """Tests for CLI interface."""
 
-import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -14,7 +13,7 @@ from sindri.cli.parsing import (
     resolve_command_id,
     find_command_by_parts,
 )
-from sindri.config import load_config, SindriConfig, Command
+from sindri.config import SindriConfig, Command
 
 
 @pytest.fixture

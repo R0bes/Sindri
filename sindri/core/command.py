@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from sindri.core.context import ExecutionContext
@@ -316,11 +316,9 @@ def is_shell_command(cmd: Command) -> bool:
     try:
         from sindri.core.context import ExecutionContext
         # Create minimal context for checking
+        from pathlib import Path
         dummy_ctx = ExecutionContext(cwd=Path("."))
         shell = cmd.get_shell(dummy_ctx)
         return shell is not None
     except Exception:
         return False
-
-
-from pathlib import Path

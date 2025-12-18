@@ -1,6 +1,5 @@
 """Structured logging setup for Sindri."""
 
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -42,7 +41,7 @@ def setup_logging(
     if json_logs:
         # JSON output
         processors.append(structlog.processors.JSONRenderer())
-        console_handler = RichHandler(
+        RichHandler(
             console=Console(file=sys.stderr),
             show_path=False,
             rich_tracebacks=True,
@@ -50,7 +49,7 @@ def setup_logging(
     else:
         # Human-readable output with colors
         processors.append(structlog.dev.ConsoleRenderer())
-        console_handler = RichHandler(
+        RichHandler(
             console=Console(stderr=True),
             show_path=False,
             rich_tracebacks=True,
@@ -74,7 +73,7 @@ def setup_logging(
         log_file = _get_log_file(log_dir)
         
         # Add file handler
-        file_handler = _create_file_handler(log_file, json_logs)
+        _create_file_handler(log_file, json_logs)
         # Note: structlog doesn't directly support file handlers in the same way,
         # but we can add a processor to write to file
         logger = logger.bind(log_file=str(log_file))

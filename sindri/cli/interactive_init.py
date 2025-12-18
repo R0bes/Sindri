@@ -1,15 +1,12 @@
 """Interactive initialization for Sindri config."""
 
-import os
 from pathlib import Path
-from typing import List, Set
+from typing import Set
 
 import typer
-from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
 from sindri.cli.display import console
-from sindri.cli.template import get_default_config_template
 
 # Available command groups
 AVAILABLE_GROUPS = {
@@ -141,7 +138,6 @@ def interactive_init(config_path: Path) -> None:
     
     for group_id, group_info in AVAILABLE_GROUPS.items():
         is_detected = group_id in detected_groups
-        default = "Yes" if is_detected else "No"
         
         should_include = Confirm.ask(
             f"  [cyan]{group_info['title']}[/cyan] - {group_info['description']}",

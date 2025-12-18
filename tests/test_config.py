@@ -1,6 +1,5 @@
 """Tests for configuration discovery and validation."""
 
-import tempfile
 from pathlib import Path
 
 import pytest

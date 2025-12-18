@@ -1,6 +1,5 @@
 """Tests for sindri.core.templates module."""
 
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest

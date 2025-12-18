@@ -5,15 +5,13 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
 from sindri.config import get_config_dir, load_config
-from sindri.core import get_registry, ExecutionContext, CommandResult
+from sindri.core import ExecutionContext, CommandResult
 from sindri.core.command import CustomCommand
 from sindri.utils import setup_logging
-from sindri.cli.display import console, print_command_list
-from sindri.cli.parsing import parse_command_parts
+from sindri.cli.display import console
 from sindri.cli.template import get_default_config_template
 
 import structlog
@@ -26,7 +24,7 @@ config_app = typer.Typer(name="config", help="Configuration management commands"
 
 def _init_registry(sindri_config):
     """Initialize the registry with built-in groups and config commands."""
-    from sindri.core import get_registry, reset_registry
+    from sindri.core import reset_registry, get_registry
     
     # Reset to ensure clean state
     reset_registry()
@@ -68,7 +66,7 @@ def config_init(
         else:
             sindri_dir = cwd / ".sindri"
             sindri_dir.mkdir(exist_ok=True)
-            console.print(f"[green]✓[/green] Created .sindri directory")
+            console.print("[green]✓[/green] Created .sindri directory")
             config_path = sindri_dir / "sindri.toml"
     
     config_path = config_path.resolve()
@@ -225,12 +223,9 @@ def run(
         registry = _init_registry(sindri_config)
 
         # Parse command parts
-        coverage_requested = False
         filtered_parts = []
         for part in command_parts:
-            if part in ["-c", "--coverage"]:
-                coverage_requested = True
-            elif not part.startswith("-"):
+            if not part.startswith("-"):
                 filtered_parts.append(part)
 
         # Extract flags for version bump command
@@ -422,9 +417,7 @@ def list_commands(
 
 def _print_registry_commands(registry) -> None:
     """Print commands from registry grouped by group."""
-    from rich.box import SIMPLE
     from rich.table import Table
-    from sindri.core.group import CommandGroup
 
     console.print("[bold]Available Commands[/bold]\n")
 

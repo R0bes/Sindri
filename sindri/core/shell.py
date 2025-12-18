@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 from sindri.core.result import CommandResult
 

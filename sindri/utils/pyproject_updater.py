@@ -1,6 +1,5 @@
 """Helper functions to update pyproject.toml for Sindri integration."""
 
-import re
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -264,14 +263,12 @@ def _append_tool_sindri_section(content: str, sindri_config: dict) -> str:
     Append [tool.sindri] section to pyproject.toml content.
     If [tool.sindri] already exists, replace it.
     """
-    import re
     
     lines = content.split("\n")
     result = []
     tool_sindri_start = -1
     tool_sindri_end = -1
     in_tool_sindri = False
-    indent_level = 0
     
     # Find existing [tool.sindri] section
     for i, line in enumerate(lines):
@@ -279,7 +276,6 @@ def _append_tool_sindri_section(content: str, sindri_config: dict) -> str:
         if stripped == "[tool.sindri]":
             tool_sindri_start = i
             in_tool_sindri = True
-            indent_level = len(line) - len(line.lstrip())
             result.append(line)
         elif in_tool_sindri:
             # Check if we've left the [tool.sindri] section

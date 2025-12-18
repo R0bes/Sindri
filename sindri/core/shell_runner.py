@@ -6,7 +6,7 @@ import asyncio
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 import structlog
 

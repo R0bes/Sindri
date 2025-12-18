@@ -1,12 +1,11 @@
 """Integration tests for Sindri."""
 
-import asyncio
 import os
 from pathlib import Path
 
 import pytest
 
-from sindri.config import Command, CommandDependency, load_config, get_config_dir
+from sindri.config import load_config, get_config_dir
 from sindri.core import ExecutionContext, get_registry
 from sindri.core.shell_runner import run_shell_command
 from tests.conftest import TestHelpers

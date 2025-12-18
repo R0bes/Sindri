@@ -5,8 +5,6 @@ import platform
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from sindri.utils import (
     escape_shell_arg,
     find_project_root,

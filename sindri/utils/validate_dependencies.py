@@ -61,7 +61,7 @@ def validate_pyproject_dependencies(pyproject_path: Path) -> Tuple[bool, Optiona
         
         if invalid_deps:
             error_msg = (
-                f"Invalid dependency URLs found in pyproject.toml:\n"
+                "Invalid dependency URLs found in pyproject.toml:\n"
                 + "\n".join(f"  - {dep}" for dep in invalid_deps)
                 + "\n\n"
                 + "URL dependencies should be in format:\n"

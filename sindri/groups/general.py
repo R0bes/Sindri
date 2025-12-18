@@ -106,7 +106,6 @@ class SetupInstallCommand(CustomCommand):
         """Install project with dev dependencies."""
         from sindri.core.shell_runner import run_shell_command
 
-        venv_path = get_venv_path(ctx.cwd)
         python_path = get_venv_python(ctx.cwd)
 
         # Check if venv exists, create if not
