@@ -52,14 +52,16 @@ class TestFindProjectRoot:
         (temp_dir / ".git").mkdir()
         
         result = find_project_root(temp_dir)
-        assert result == temp_dir
+        assert result is not None
+        assert result.resolve() == temp_dir.resolve()
     
     def test_find_project_root_with_pyproject(self, temp_dir: Path):
         """Test finding project root with pyproject.toml."""
         (temp_dir / "pyproject.toml").write_text("[project]\nname = 'test'")
         
         result = find_project_root(temp_dir)
-        assert result == temp_dir
+        assert result is not None
+        assert result.resolve() == temp_dir.resolve()
     
     def test_find_project_root_in_subdirectory(self, temp_dir: Path):
         """Test finding project root from subdirectory."""
@@ -95,7 +97,8 @@ class TestFindProjectRoot:
         (temp_dir / "setup.py").write_text("# setup")
         
         result = find_project_root(temp_dir)
-        assert result == temp_dir
+        assert result is not None
+        assert result.resolve() == temp_dir.resolve()
     
     def test_find_project_root_precedence(self, temp_dir: Path):
         """Test that .git takes precedence over other markers."""
@@ -103,7 +106,8 @@ class TestFindProjectRoot:
         (temp_dir / "pyproject.toml").write_text("[project]\nname = 'test'")
         
         result = find_project_root(temp_dir)
-        assert result == temp_dir
+        assert result is not None
+        assert result.resolve() == temp_dir.resolve()
 
 
 class TestGetShell:
@@ -331,14 +335,16 @@ class TestGetProjectName:
         (temp_dir / ".hg").mkdir()
         
         result = find_project_root(temp_dir)
-        assert result == temp_dir
+        assert result is not None
+        assert result.resolve() == temp_dir.resolve()
     
     def test_find_project_root_with_svn(self, temp_dir: Path):
         """Test finding project root with .svn marker."""
         (temp_dir / ".svn").mkdir()
         
         result = find_project_root(temp_dir)
-        assert result == temp_dir
+        assert result is not None
+        assert result.resolve() == temp_dir.resolve()
 
 
 class TestNormalizeProjectName:

@@ -235,7 +235,8 @@ class TestConfigDiscovery:
         config_file.write_text('version = "1.0"\n[[commands]]\nid = "test"\nshell = "echo test"')
         
         found = discover_config(start_path=temp_dir)
-        assert found == config_file
+        assert found is not None
+        assert found.resolve() == config_file.resolve()
     
     def test_discover_config_in_parent_dir(self, temp_dir: Path):
         """Test config discovery in parent directory."""
@@ -246,7 +247,8 @@ class TestConfigDiscovery:
         subdir.mkdir()
         
         found = discover_config(start_path=subdir)
-        assert found == config_file
+        assert found is not None
+        assert found.resolve() == config_file.resolve()
     
     def test_discover_config_multiple_levels(self, temp_dir: Path):
         """Test config discovery across multiple directory levels."""
@@ -257,7 +259,8 @@ class TestConfigDiscovery:
         nested = TestHelpers.create_nested_dirs(temp_dir, 3)
         
         found = discover_config(start_path=nested)
-        assert found == config_file
+        assert found is not None
+        assert found.resolve() == config_file.resolve()
     
     def test_discover_config_not_found(self, temp_dir: Path):
         """Test config discovery when no config exists."""
@@ -270,7 +273,8 @@ class TestConfigDiscovery:
         config_file.write_text('version = "1.0"\n[[commands]]\nid = "test"\nshell = "echo test"')
         
         found = discover_config(start_path=temp_dir, config_path=config_file)
-        assert found == config_file
+        assert found is not None
+        assert found.resolve() == config_file.resolve()
     
     def test_discover_config_override_not_exists(self, temp_dir: Path):
         """Test config discovery with non-existent override path."""
@@ -286,7 +290,8 @@ class TestConfigDiscovery:
         config_file.write_text('version = "1.0"\n[[commands]]\nid = "test"\nshell = "echo test"')
         
         found = discover_config(start_path=temp_dir)
-        assert found == config_file
+        assert found is not None
+        assert found.resolve() == config_file.resolve()
         
         # Clean up and test .sindri.yml (not supported yet, but test the search)
         config_file.unlink()
@@ -371,7 +376,8 @@ class TestLoadConfig:
         """Test getting config directory."""
         config = load_config(config_path=sample_config_file)
         config_dir = get_config_dir(config)
-        assert config_dir == sample_config_file.parent
+        assert config_dir is not None
+        assert config_dir.resolve() == sample_config_file.parent.resolve()
     
     def test_load_config_invalid_toml(self, temp_dir: Path):
         """Test loading invalid TOML file."""

@@ -120,7 +120,8 @@ class TestConfigDiscoveryIntegration:
         from sindri.config import discover_config
         
         found = discover_config(start_path=nested)
-        assert found == config_file
+        assert found is not None
+        assert found.resolve() == config_file.resolve()
         
         config = load_config(config_path=found)
         assert config.get_command_by_id("test") is not None

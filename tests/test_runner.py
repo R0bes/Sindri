@@ -244,7 +244,9 @@ class TestShellRunner:
         )
         
         assert not result.success
-        assert result.exit_code == 1
+        # Command not found typically returns 127 on Unix, 1 on Windows
+        # shell_runner.py catches exceptions and returns 1
+        assert result.exit_code in [1, 127]
         # shell_runner.py may not set error for failed commands on Windows
         # Just verify the command failed
         if result.error:
